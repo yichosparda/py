@@ -5,7 +5,7 @@ def main():
     root = tk.Tk()
     root.title("Cat Viewer")
     # Load the image (replace 'cat.png' with your image filename)
-    pil_image = Image.open("/Users/jasmine/Documents/School/py/palace.png")
+    pil_image = Image.open("palace.png")
     # Convert to a Photolmage
     tk_image = ImageTk.PhotoImage(pil_image)
     # Create a label to hold the image and pack it into the window
