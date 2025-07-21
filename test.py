@@ -17,6 +17,8 @@ mlvl = 0
 clvl = 0
 lvls = [mlvl, alvl, slvl, clvl]
 
+xpmultiplier = 1
+
 subjectindex = 'none'
 
 mlock = 5
@@ -24,6 +26,8 @@ alock = 5
 slock = 5
 clock = 5
 locks = [mlock, alock, slock, clock]
+
+qsubjects = ["maths", "animal", "shape", "colour"]
 
 dialoguenum = 0
 dialogue = ["hi vro u can call me v the overseer of this so called dungeon", 
@@ -42,6 +46,7 @@ image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", 
 image_references = []
 
 tg = FALSE
+# tg = TRUE
 
 def loadicons():
     global photo
@@ -227,13 +232,33 @@ def mathquiz():
         global window
         global mlock
         global locks
-        if mlvl == 0:
+        global lvls
+        global xpmultiplier
+        if lvls[0] == 0:
             if result == TRUE:
                 window.after_cancel(after_id)
                 mlock -= 1
                 locks = [mlock, alock, slock, clock]
                 marea()
             else: 
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("maths question")
+                window.geometry("400x150")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                mathquiz()
+        else: 
+            if result == TRUE:
+                window.after_cancel(after_id)
+                lvls[0] += 1 * xpmultiplier
+                locks = [mlock, alock, slock, clock]
+                window.destroy()
+                windowsetup()
+                traininggrounds()
+            else:
                 window.after_cancel(after_id)
                 window.destroy()
                 window = Tk()
@@ -294,7 +319,387 @@ def mathquiz():
     check = Button(window, text="check", command=checkanswer)
     check.grid(row=3, column=0, sticky="w", padx=20)
 
-quizes = [mathquiz]
+def animalsquiz():
+    global window
+    global result
+    global acount
+    window.destroy()
+    window = Tk()
+    window.title("animal question")
+    window.geometry("300x270")
+    window.option_add("*Background", "#000000")
+    window.config(bg="#000000")
+    window.resizable(False,False)
+    acount = 15
+    result = 0 
+
+    #placement for user answers
+    animals = ['Bear','Bird','Cat','Dog','Fox','Horse', 'Penguin', 'Raccoon']
+    acount = 15
+
+    def leave():
+        global window
+        global alock
+        global locks
+        global lvls
+        global xpmultiplier
+        if lvls[1] == 0:
+            if result == TRUE:
+                window.after_cancel(after_id)
+                alock -= 1
+                locks = [mlock, alock, slock, clock]
+                aarea()
+            else: 
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("animal question")
+                window.geometry("300x270")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                animalsquiz()
+        else: 
+            if result == TRUE:
+                window.after_cancel(after_id)
+                lvls[1] += 1 * xpmultiplier
+                locks = [mlock, alock, slock, clock]
+                window.destroy()
+                windowsetup()
+                traininggrounds()
+            else:
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("animal question")
+                window.geometry("300x270")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                animalsquiz()
+
+    def countdown():
+        global acount
+        global after_id
+        try :
+            int(acount)
+            if acount >= 0:
+                timer.config(text=f"you have {acount} seconds left!")
+                acount -= 1
+                after_id = window.after(1000, countdown)
+            else:
+                animalanswer()
+        except:
+            timer.grid_forget
+
+    animal = random.randint(0,7)
+
+    def enterbutton(event):
+        if acount == "done":
+            leave()
+        else:
+            animalanswer()
+
+    def animalanswer():
+        global result
+        global acount
+        text2 = 0
+        answer = (qanswer.get()).upper()
+        if answer == animals[animal].upper():
+            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2.grid(row=4, column=0, sticky="w", padx=20)
+            check.config(text = "continue", command = leave)
+            check.grid(row = 5, column=0)
+            mixer.Sound.play(correct)
+            acount = "done"
+            result = TRUE
+
+        else:
+            text2=Label(window, text=f"sorry... it's {animals[animal].lower()}", font=("DotGothic16", 15, "bold"))
+            text2.grid(row=4, column=0, sticky="w", padx=20)
+            check.config(text = "continue", command = leave)
+            check.grid(row = 5, column=0)
+            mixer.Sound.play(incorrect)
+            acount = "done"
+            result = FALSE
+
+    timer = Label(window, text=f"you have {acount} seconds left!", font=("DotGothic16", 15, "bold"))
+    timer.grid(row=0, column=0, sticky="w", padx=5)
+
+    def askanimal():
+        global photo
+        question = Label(window, text="what animal is this?", font=("DotGothic16", 20, "bold"))
+        question.grid(row=1, column=0, sticky="w", padx=15)
+        image = Image.open(f"animals/{animals[animal]}.png")
+        resized_image = image.resize((100, 100))
+        photo = ImageTk.PhotoImage(resized_image)
+        theshape = Label(window, image=photo)
+        theshape.grid(row=2, column=0)
+
+    askanimal()
+    countdown()
+    qanswer = Entry(window, bd=3, relief="ridge", width=10)
+    qanswer.grid(row=3, column=0, sticky="w", padx=20)
+    qanswer.bind("<Return>", enterbutton)
+    check = Button(window, text="check", command=animalanswer)
+    check.grid(row=4, column=0, sticky="w", padx=20)
+
+def shapesquiz():
+    global scount
+    global window
+    global result
+    window.destroy()
+    window = Tk()
+    window.title("shape question")
+    window.geometry("300x270")
+    window.option_add("*Background", "#000000")
+    window.config(bg="#000000")
+    window.resizable(False,False)
+    result = 0
+    shapes = ['Rectangle','Square','Circle','Pentagon','Hexagon','Octagon']
+    scount = 15
+
+    def leave():
+        global window
+        global slock
+        global locks
+        global lvls
+        global xpmultiplier
+        if lvls[2] == 0:
+            if result == TRUE:
+                window.after_cancel(after_id)
+                slock -= 1
+                locks = [mlock, alock, slock, clock]
+                sarea()
+            else: 
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("shape question")
+                window.geometry("300x270")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                shapesquiz()
+        else: 
+            if result == TRUE:
+                window.after_cancel(after_id)
+                lvls[2] += 1 * xpmultiplier
+                locks = [mlock, alock, slock, clock]
+                window.destroy()
+                windowsetup()
+                traininggrounds()
+            else:
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("shape question")
+                window.geometry("300x270")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                shapesquiz()
+
+    def countdown():
+        global scount
+        global after_id
+        try :
+            int(scount)
+            if scount >= 0:
+                timer.config(text=f"you have {scount} seconds left!")
+                scount -= 1
+                after_id = window.after(1000, countdown)
+            else:
+                shapeanswer()
+        except:
+            timer.grid_forget
+
+    shape = random.randint(0,5)
+
+    def enterbutton(event):
+        if scount == "done":
+            leave()
+        else:
+            shapeanswer()
+
+    def shapeanswer():
+        global scount
+        global answer
+        global result
+        text2 = 0
+        answer = (sanswer.get()).upper()
+        if answer == "RECTANGLE" and shapes[shape].upper() == "SQUARE":
+            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2.grid(row=4, column=0, sticky="w", padx=20)
+            check.config(text = "continue", command = leave)
+            check.grid(row = 5, column=0)
+            mixer.Sound.play(correct)
+            scount = "done"
+            result = TRUE
+            
+        elif answer == shapes[shape].upper():
+            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2.grid(row=4, column=0, sticky="w", padx=20)
+            check.config(text = "continue", command = leave)
+            check.grid(row = 5, column=0)
+            mixer.Sound.play(correct)
+            scount = "done"
+            result = TRUE
+
+        else:
+            text2=Label(window, text=f"sorry... it's {shapes[shape].lower()}", font=("DotGothic16", 15, "bold"))
+            text2.grid(row=4, column=0, sticky="w", padx=20)
+            check.config(text = "continue", command = leave)
+            check.grid(row = 5, column=0)
+            mixer.Sound.play(incorrect)
+            scount = "done"
+            result = FALSE
+
+    def askshape():
+        global photo
+        question = Label(window, text="what shape is this?", font=("DotGothic16", 20, "bold"))
+        question.grid(row=1, column=0, sticky="w", padx=15)
+        image = Image.open(f"shapes/{shapes[shape]}.png")
+        if shape == 0:
+            resized_image = image.resize((200, 100))
+            photo = ImageTk.PhotoImage(resized_image)
+            theshape = Label(window, image=photo)
+            theshape.grid(row=2, column=0)
+        else: 
+            resized_image = image.resize((100, 100))
+            photo = ImageTk.PhotoImage(resized_image)
+            theshape = Label(window, image=photo)
+            theshape.grid(row=2, column=0)
+
+    timer = Label(window, text=f"you have {scount} seconds left!", font=("DotGothic16", 15, "bold"))
+    timer.grid(row=0, column=0, sticky="w", padx=5)
+    askshape()
+    countdown()
+    sanswer = Entry(window, bd=3, relief="ridge", width=10)
+    sanswer.grid(row=3, column=0, sticky="w", padx=20)
+    sanswer.bind("<Return>", enterbutton)
+    check = Button(window, text="check", command=shapeanswer)
+    check.grid(row=4, column=0, sticky="w", padx=20)
+
+def coloursquiz():
+    global ccount
+    global window
+    global result
+    window.destroy()
+    window = Tk()
+    window.title("colour question")
+    window.geometry("300x160")
+    window.option_add("*Background", "#000000")
+    window.config(bg="#000000")
+    window.resizable(False,False)
+    result = 0
+    colours = ['Red','Blue','Green','Pink','Black','Yellow','Orange','White','Purple','Brown']
+    ccount = 15
+
+    def leave():
+        global window
+        global clock
+        global locks
+        global lvls
+        global xpmultiplier
+        if lvls[3] == 0:
+            if result == TRUE:
+                window.after_cancel(after_id)
+                clock -= 1
+                locks = [mlock, alock, slock, clock]
+                carea()
+            else: 
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("colour question")
+                window.geometry("300x160")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                coloursquiz()
+        else: 
+            if result == TRUE:
+                window.after_cancel(after_id)
+                lvls[3] += 1 * xpmultiplier
+                locks = [mlock, alock, slock, clock]
+                window.destroy()
+                windowsetup()
+                traininggrounds()
+            else:
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("colour question")
+                window.geometry("300x160")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                coloursquiz()
+
+    def countdown():
+        global ccount
+        global after_id
+        try :
+            int(ccount)
+            if ccount >= 0:
+                timer.config(text=f"you have {ccount} seconds left!")
+                ccount -= 1
+                after_id = window.after(1000, countdown)
+            else:
+                colouranswer()
+        except:
+            timer.grid_forget
+
+    colour = random.randint(0,9)
+
+    def enterbutton(event):
+        global ccount
+        if ccount == "done":
+            leave()
+        else:
+            colouranswer()
+
+    def askcolour():
+        question = Label(window, text="what colour is this?", font=("DotGothic16", 20, "bold"))
+        question.grid(row=1, column=0, sticky="w", padx=15)
+        thecolour = Label(window, text="---", fg=colours[colour], bg=colours[colour], font=("DotGothic16", 12, "bold"), relief="raised")
+        thecolour.grid(row=1, column=1)
+
+    def colouranswer():
+        global ccount
+        global answer
+        global result
+        text2 = 0
+        answer = (canswer.get()).upper()
+        if answer == colours[colour].upper():
+            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2.grid(row=3, column=0, sticky="w", padx=20)
+            check.config(text = "continue", command = leave)
+            check.grid(row = 4, column=0)
+            mixer.Sound.play(correct)
+            result = TRUE
+            ccount = "done"
+        else:
+            text2=Label(window, text=f"sorry... it's {colours[colour].lower()}", font=("DotGothic16", 15, "bold"))
+            text2.grid(row=3, column=0, sticky="w", padx=20)
+            check.config(text = "continue", command = leave)
+            check.grid(row = 4, column=0)
+            mixer.Sound.play(incorrect)
+            result = FALSE
+            ccount = "done"
+
+    timer = Label(window, text=f"you have {ccount} seconds left!", font=("DotGothic16", 15, "bold"))
+    timer.grid(row=0, column=0, sticky="w", padx=5)
+    askcolour()
+    countdown()
+    canswer = Entry(window, bd=3, relief="ridge", width=10)
+    canswer.grid(row=2, column=0, sticky="w", padx=20)
+    canswer.bind("<Return>", enterbutton)
+    check = Button(window, text="check", command=colouranswer)
+    check.grid(row=3, column=0, sticky="w", padx=20)
+
+quizes = [mathquiz, animalsquiz, shapesquiz, coloursquiz]
 
 def tutq():
     global locks
@@ -308,7 +713,6 @@ def tutq():
 
 def areasetup():
     global subjectindex
-    global mlock
     global lock
     global lectern
     if locks[subjectindex] > 0:
@@ -331,6 +735,8 @@ def profile():
     nero = ImageTk.PhotoImage(rnero_image)
     neropfp = Button(window, image=nero, command = showstats)
     neropfp.place(x= 30, y = 30)
+    nerotext = Label(window, text="stats")
+    nerotext.place(x=30, y=150)
 
 def marea():
     global window
@@ -344,21 +750,58 @@ def marea():
     else:
         areasetup()
 
-areas = [marea]
+def aarea():
+    global window
+    global subjectindex
+    subjectindex = 1
+    window.destroy()
+    windowsetup()
+    profile()
+    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+        vdialogue()
+    else:
+        areasetup()
+
+def sarea():
+    global window
+    global subjectindex
+    subjectindex = 2
+    window.destroy()
+    windowsetup()
+    profile()
+    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+        vdialogue()
+    else:
+        areasetup()
+
+def carea():
+    global window
+    global subjectindex
+    subjectindex = 3
+    window.destroy()
+    windowsetup()
+    profile()
+    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+        vdialogue()
+    else:
+        areasetup()
+
+areas = [marea, aarea, sarea, carea]
 
 def fintut():
     global lvls
     global subjectindex
     global textbox
+    global mlvl
     textbox_image = Image.open("sprites/textbox.png")
     textbox = ImageTk.PhotoImage(textbox_image)
-    thetextbox = Button(window, image=textbox, command = lobby)
+    thetextbox = Button(window, image=textbox, command = tgunlock)
     thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
     if lvls[subjectindex] == 0:
         vtext = Label(window, text = f'congrats! you have learnt {spells[subjectindex]} spells u can now use them to increase your {stats[subjectindex]} stat')
         vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
         lvls[subjectindex] = 1
-        thetextbox.config(command=tgunlock)
+        print(lvls[subjectindex])
     else: 
         vtext = Label(window, text = 'spell already learnt')
         vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
@@ -366,19 +809,15 @@ def fintut():
 def doors():
     global door
     global window
-    global mlvl
-    global alvl
-    global clvl
-    global slvl
     door_image = Image.open("sprites/door.png")
     door = ImageTk.PhotoImage(door_image)
     mdoor = Button(window, image=door, command=marea)
     mdoor.place(x = 800, y = 100)
-    sdoor = Button(window, image = door)
+    sdoor = Button(window, image = door, command= sarea)
     sdoor.place(x = 200, y = 100)
-    adoor = Button(window, image = door)
+    adoor = Button(window, image = door, command=aarea)
     adoor.place(x = 50, y = 400)
-    cdoor = Button(window, image = door)
+    cdoor = Button(window, image = door, command= carea)
     cdoor.place(x = 950, y = 400)
     THEdoor = Button(window, image = door)
     THEdoor.place(x = 500, y = 50)
@@ -386,7 +825,6 @@ def doors():
 def showstats():
     global window
     global statwin
-    global photo
     global neropfp
     statwin = Toplevel(window)
     statwin.title("account")
@@ -452,8 +890,30 @@ def tgverify():
         text1.place(relx=0.5, y = 700 ,anchor=CENTER)
 
 def traininggrounds():
+    global lvls
     for widget in window.winfo_children():
         widget.destroy()
+    statlist = Label(window, text=f"attack lvl = {lvls[0]}     defence lvl = {lvls[1]}     luck lvl = {lvls[2]}      health lvl = {lvls[3]}")
+    statlist.pack(pady=20)
+    loadicons()
+    for x in range(0,4):
+        frame = Frame(window)
+        frame.pack(anchor=N, pady=10)
+        icons = Button(frame, image=image_references[x], command=quizes[x])
+        icons.pack(side=TOP,padx= 20)
+        desc = Label(frame, text = f'{stats[x]} training\n {qsubjects[x]} questions', font=("DotGothic16", 15, "bold"))
+        desc.pack()
+    combatfrm = Frame(window)
+    combatfrm.pack(anchor=CENTER)
+    combatstart = Button(combatfrm, text="combat trial", command=combatsetup)
+    combatstart.pack()
+    combatdesc = Label(combatfrm, text= "use combination of all spells to face off minor enemies\n offers double xp")
+    combatdesc.pack()
+
+def combatsetup():
+    for widget in window.winfo_children():
+        widget.destroy()
+    
 
 def lobby():
     for widget in window.winfo_children():
