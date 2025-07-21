@@ -36,8 +36,12 @@ dialogue = ["hi vro u can call me v the overseer of this so called dungeon",
             "\n but ur definitely too weak rn so ur gonna have to learn a few combat spells from the lecterns scattered around this place", 
             "u can check ur stats by clicking ur profile on the top left "
             "\n and train your spells at the training grounds when u learn some, "
-            "\n good luck out there", "", 'well this is a surprise, i guess ill have to break the locks for u '
-            '\nbut ur gonna need to lend me some of ur energy since im a bit frail in this form']
+            "\n good luck out there", 
+            "", 
+            'well this is a surprise, i guess ill have to break the locks for u '
+            '\nbut ur gonna need to lend me some of ur energy since im a bit frail in this form',
+            "this is the training grounds, i'd say u need to be at least level 20 in all ur stats to face cerberus",
+            "u could also find some stray demons around to test ur abilities by pressing the combat trial button"]
 
 spells = ['offensive', 'defensive', 'tactical', 'supportive']
 stats = ['attack', 'defence', 'luck', 'health']
@@ -98,6 +102,11 @@ def nexttext():
             widget.destroy()
         profile()
         areasetup()
+    elif dialoguenum == 7:
+        dialoguenum +=1
+        for widget in window.winfo_children():
+            widget.destroy()
+        tgsetup()
     else:
         vdialogue()
 
@@ -857,7 +866,7 @@ def beginning():
 def tgunlock():
     global textbox
     global tg
-    if sum(lvls) == 1:
+    if sum(lvls) == 4:
         textbox_image = Image.open("sprites/textbox.png")
         textbox = ImageTk.PhotoImage(textbox_image)
         thetextbox = Button(window, image=textbox, command = lobby)
@@ -892,7 +901,16 @@ def tgverify():
 def traininggrounds():
     global lvls
     for widget in window.winfo_children():
-        widget.destroy()
+            widget.destroy()
+    if sum(lvls) == 4:
+        vdialogue()
+    else:
+        home = Button(window, text='home', command=lobby)
+        home.pack(pady= 30)
+        tgsetup()
+
+def tgsetup():
+    global lvls
     statlist = Label(window, text=f"attack lvl = {lvls[0]}     defence lvl = {lvls[1]}     luck lvl = {lvls[2]}      health lvl = {lvls[3]}")
     statlist.pack(pady=20)
     loadicons()
