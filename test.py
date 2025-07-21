@@ -7,23 +7,104 @@ from pygame.locals import *
 from pygame import mixer
 import time
 
+mixer.init()
+correct = mixer.Sound("sounds/correct.mp3")
+incorrect = mixer.Sound("sounds/incorrect.mp3")
+
 alvl = 0
 slvl = 0
 mlvl = 0
 clvl = 0
-mlock = 5
+lvls = [mlvl, alvl, slvl, clvl]
 
-window = Tk()
-window.title("")
-window.geometry("1200x900")
-window.option_add("*Background", "#000000")
-window.config(bg="#000000")
-window.resizable(False,False)
+subjectindex = 'none'
+
+mlock = 5
+alock = 5
+slock = 5
+clock = 5
+locks = [mlock, alock, slock, clock]
+
+dialoguenum = 0
+dialogue = ["hi vro u can call me v the overseer of this so called dungeon", 
+            "u want to escape?"
+            "\n well ur gonna have to fight that big dog cerberus past that door at the end of the hallway "
+            "\n but ur definitely too weak rn so ur gonna have to learn a few combat spells from the lecterns scattered around this place", 
+            "u can check ur stats by clicking ur profile on the top left "
+            "\n and train your spells in the infested gardens when u learn some, "
+            "\n good luck out there", "", 'well this is a surprise, i guess ill have to break the locks for u '
+            '\nbut ur gonna need to lend me some of ur energy since im a bit frail in this form']
+
+spells = ['offensive', 'defensive', 'tactical', 'supportive']
+stats = ['attack', 'defence', 'luck', 'health']
+
+image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", "sprites/health.png"]
+image_references = []
+
+def loadicons():
+    global photo
+    global image_references
+    global image_paths
+    image_references.clear()
+    for x in range(0,4):
+        img = Image.open(image_paths[x])
+        img = img.resize((70, 70))
+        photo = ImageTk.PhotoImage(img)
+        image_references.append(photo)
+
+def windowsetup():
+    global window
+    window = Tk()
+    window.title("")
+    window.geometry("1200x900")
+    window.option_add("*Background", "#000000")
+    window.config(bg="#000000")
+    window.resizable(False,False)
+windowsetup()
+
+def vdialogue():
+    global textbox
+    global v
+    global window
+    global vtext
+    v_image = Image.open("sprites/v.png")
+    v = ImageTk.PhotoImage(v_image)
+    vphoto = Label(window, image = v)
+    vphoto.place(x = 700, y = 200)
+    textbox_image = Image.open("sprites/textbox.png")
+    textbox = ImageTk.PhotoImage(textbox_image)
+    thetextbox = Button(window, image=textbox, command = nexttext)
+    thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
+    vtext = Label(window, text = dialogue[dialoguenum])
+    vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
+
+def nexttext():
+    global dialoguenum
+    global vtext
+    dialoguenum += 1
+    vtext.destroy()
+    if dialoguenum == 3:
+        lobby()
+        dialoguenum +=1
+    elif dialoguenum == 5:
+        for widget in window.winfo_children():
+            widget.destroy()
+        profile()
+        areasetup()
+    else:
+        vdialogue()
 
 def mathquiz():
     global window
     global result
     global mcount
+    window.destroy()
+    window = Tk()
+    window.title("maths question")
+    window.geometry("400x150")
+    window.option_add("*Background", "#000000")
+    window.config(bg="#000000")
+    window.resizable(False,False)
     mcount = 15
     result = 0 
     #general class for math questions and addition
@@ -117,8 +198,12 @@ def mathquiz():
 
     def checkanswer():
         global mcount
+        global result
         text2 = Label(window, text=question.answer(), font=("DotGothic16", 15, "bold"), justify=LEFT)
         text2.grid(row=2, column=0, sticky="w", padx=20)
+        if result == TRUE:
+            mixer.Sound.play(correct)
+        else: mixer.Sound.play(incorrect)
         check.config(text = "continue", command = leave)
         mcount = "done"
 
@@ -139,10 +224,12 @@ def mathquiz():
     def leave():
         global window
         global mlock
+        global locks
         if mlvl == 0:
             if result == TRUE:
                 window.after_cancel(after_id)
                 mlock -= 1
+                locks = [mlock, alock, slock, clock]
                 marea()
                 print(mlock)
             else: 
@@ -207,64 +294,135 @@ def mathquiz():
     check = Button(window, text="check", command=checkanswer)
     check.grid(row=3, column=0, sticky="w", padx=20)
 
-def marea():
+quizes = [mathquiz]
+
+def tutq():
+    global locks
+    global subjectindex
+    global areas
+    global quizes
+    if locks[subjectindex] == 0:
+        areas[subjectindex]()
+    else:
+        quizes[subjectindex]()
+
+def areasetup():
+    global subjectindex
+    global mlock
     global lock
-    global window
     global lectern
-    window.destroy()
-    window = Tk()
-    window.title("")
-    window.geometry("1200x900")
-    window.option_add("*Background", "#000000")
-    window.config(bg="#000000")
-    window.resizable(False,False)
-    if mlock > 0:
+    print(locks[subjectindex])
+    if locks[subjectindex] > 0:
         lock_image = Image.open("sprites/lock.png")
         lock = ImageTk.PhotoImage(lock_image)
-        lock1 = Button(window, image = lock, command = mtutq)
-        lock1.place(x = 100, y = 100)
+        lock1 = Button(window, image = lock, command = tutq)
+        lock1.place(relx=0.5, rely = 0.5 ,anchor=CENTER)
     else: 
         lectern_image = Image.open("sprites/lectern.png")
         lectern = ImageTk.PhotoImage(lectern_image)
-        thelectern = Button(window, image=lectern, command = mfintut)
-        thelectern.place(x = 200, y = 200)
+        thelectern = Button(window, image=lectern, command = fintut)
+        thelectern.place(relx=0.5, rely = 0.5 ,anchor=CENTER)
 
-def mtutq():
-    global lectern
-    global result
-    global mlock
+def profile():
+    global nero
     global window
+    global neropfp
+    nero_image = Image.open("sprites/nero.png")
+    rnero_image = nero_image.resize((100, 100))
+    nero = ImageTk.PhotoImage(rnero_image)
+    neropfp = Button(window, image=nero, command = showstats)
+    neropfp.place(x= 30, y = 30)
+
+def marea():
+    global window
+    global subjectindex
+    subjectindex = 0
     window.destroy()
-    window = Tk()
-    window.title("maths question")
-    window.geometry("400x150")
-    window.option_add("*Background", "#000000")
-    window.config(bg="#000000")
-    window.resizable(False,False)
-    if mlock == 0:
-        marea()
+    windowsetup()
+    profile()
+    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+        vdialogue()
     else:
-        mathquiz()
+        areasetup()
 
-def mfintut():
+areas = [marea]
+
+def fintut():
+    global lvls
+    global subjectindex
+    global textbox
+    lvls[subjectindex] = 1
+    print(lvls)
+    textbox_image = Image.open("sprites/textbox.png")
+    textbox = ImageTk.PhotoImage(textbox_image)
+    thetextbox = Button(window, image=textbox, command = lobby)
+    thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
+    vtext = Label(window, text = f'congrats! you have learnt {spells[subjectindex]} spells u can now use them to increase your ')
+    vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
+
+def doors():
+    global door
+    global window
     global mlvl
-    mlvl = 1
+    global alvl
+    global clvl
+    global slvl
+    door_image = Image.open("sprites/door.png")
+    door = ImageTk.PhotoImage(door_image)
+    if slvl == 0:
+        sdoor = Button(window, image = door)
+        sdoor.place(x = 200, y = 100)
+    if alvl ==0:
+        adoor = Button(window, image = door)
+        adoor.place(x = 50, y = 400)
+    if mlvl == 0:
+        mdoor = Button(window, image=door, command=marea)
+        mdoor.place(x = 800, y = 100)
+    if clvl ==0:
+        cdoor = Button(window, image = door)
+        cdoor.place(x = 950, y = 400)
+    THEdoor = Button(window, image = door)
+    THEdoor.place(x = 500, y = 50)
 
-door_image = Image.open("sprites/door.png")
-door = ImageTk.PhotoImage(door_image)
-if slvl == 0:
-    sdoor = Button(window, image = door)
-    sdoor.place(x = 200, y = 100)
-if alvl ==0:
-    adoor = Button(window, image = door)
-    adoor.place(x = 50, y = 400)
-if mlvl == 0:
-    mdoor = Button(window, image=door, command=marea)
-    mdoor.place(x = 800, y = 100)
-if clvl ==0:
-    cdoor = Button(window, image = door)
-    cdoor.place(x = 950, y = 400)
-THEdoor = Button(window, image = door)
-THEdoor.place(x = 500, y = 50)
+def showstats():
+    global window
+    global statwin
+    global photo
+    global neropfp
+    statwin = Toplevel(window)
+    statwin.title("account")
+    statwin.geometry("350x430")
+    statwin.option_add("*Background", "#000000")
+    statwin.config(bg="#000000")
+    statwin.resizable(False,False)
+    neropfp.config(command = closestats)
+    loadicons()
+    for x in range(0,4):
+        frame = Frame(statwin)
+        frame.pack(anchor=W)
+        label = Label(frame, image=image_references[x])
+        label.pack(side=LEFT,padx= 20, pady= 10)
+        lvlnum = Label(frame, text = f'{stats[x]} level = {lvls[x]}', font=("DotGothic16", 20, "bold"))
+        lvlnum.pack(side = LEFT)
+    quitstat = Button(statwin, text = "close", command=closestats)
+    quitstat.pack()
+
+def closestats():
+    global neropfp
+    global statwin
+    statwin.destroy()
+    neropfp.config(command = showstats)
+
+def beginning():
+    profile()
+    vdialogue()
+
+def lobby():
+    for widget in window.winfo_children():
+        widget.destroy()
+    doors()
+    profile()
+
+beginning()
 
 mainloop()

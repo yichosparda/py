@@ -402,12 +402,12 @@ def animalsquiz():
     check = Button(awindow, text="check", command=animalanswer)
     check.grid(row=4, column=0, sticky="w", padx=20)
 
-def pickquiz():
-    quizes = [mathquiz, shapesquiz, coloursquiz, animalsquiz]
-    quiz = random.randint(0,3)
-    quizes[quiz]()
+# def pickquiz():
+#     quizes = [mathquiz, shapesquiz, coloursquiz, animalsquiz]
+#     quiz = random.randint(0,3)
+#     quizes[quiz]()
 
-thequiz = Button(text="question", command=pickquiz)
-thequiz.pack()
+# thequiz = Button(text="question", command=pickquiz)
+# thequiz.pack()
 
 mainloop()
