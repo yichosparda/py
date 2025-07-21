@@ -31,7 +31,7 @@ dialogue = ["hi vro u can call me v the overseer of this so called dungeon",
             "\n well ur gonna have to fight that big dog cerberus past that door at the end of the hallway "
             "\n but ur definitely too weak rn so ur gonna have to learn a few combat spells from the lecterns scattered around this place", 
             "u can check ur stats by clicking ur profile on the top left "
-            "\n and train your spells in the infested gardens when u learn some, "
+            "\n and train your spells at the training grounds when u learn some, "
             "\n good luck out there", "", 'well this is a surprise, i guess ill have to break the locks for u '
             '\nbut ur gonna need to lend me some of ur energy since im a bit frail in this form']
 
@@ -40,6 +40,8 @@ stats = ['attack', 'defence', 'luck', 'health']
 
 image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", "sprites/health.png"]
 image_references = []
+
+tg = FALSE
 
 def loadicons():
     global photo
@@ -231,7 +233,6 @@ def mathquiz():
                 mlock -= 1
                 locks = [mlock, alock, slock, clock]
                 marea()
-                print(mlock)
             else: 
                 window.after_cancel(after_id)
                 window.destroy()
@@ -242,7 +243,6 @@ def mathquiz():
                 window.config(bg="#000000")
                 window.resizable(False,False)
                 mathquiz()
-                print(mlock)
 
     def enterbutton(event):
         if mcount == "done":
@@ -257,8 +257,8 @@ def mathquiz():
         except:
             manswer.delete(0, 'end')
 
-    # subject = random.randint(0,3)
-    subject = 0
+    subject = random.randint(0,3)
+    # subject = 0
 
     if subject == 2:
         question = subjects[subject](random.randint(1,5), random.randint(1,5))
@@ -311,7 +311,6 @@ def areasetup():
     global mlock
     global lock
     global lectern
-    print(locks[subjectindex])
     if locks[subjectindex] > 0:
         lock_image = Image.open("sprites/lock.png")
         lock = ImageTk.PhotoImage(lock_image)
@@ -351,14 +350,18 @@ def fintut():
     global lvls
     global subjectindex
     global textbox
-    lvls[subjectindex] = 1
-    print(lvls)
     textbox_image = Image.open("sprites/textbox.png")
     textbox = ImageTk.PhotoImage(textbox_image)
     thetextbox = Button(window, image=textbox, command = lobby)
     thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
-    vtext = Label(window, text = f'congrats! you have learnt {spells[subjectindex]} spells u can now use them to increase your ')
-    vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
+    if lvls[subjectindex] == 0:
+        vtext = Label(window, text = f'congrats! you have learnt {spells[subjectindex]} spells u can now use them to increase your {stats[subjectindex]} stat')
+        vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
+        lvls[subjectindex] = 1
+        thetextbox.config(command=tgunlock)
+    else: 
+        vtext = Label(window, text = 'spell already learnt')
+        vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
 
 def doors():
     global door
@@ -369,18 +372,14 @@ def doors():
     global slvl
     door_image = Image.open("sprites/door.png")
     door = ImageTk.PhotoImage(door_image)
-    if slvl == 0:
-        sdoor = Button(window, image = door)
-        sdoor.place(x = 200, y = 100)
-    if alvl ==0:
-        adoor = Button(window, image = door)
-        adoor.place(x = 50, y = 400)
-    if mlvl == 0:
-        mdoor = Button(window, image=door, command=marea)
-        mdoor.place(x = 800, y = 100)
-    if clvl ==0:
-        cdoor = Button(window, image = door)
-        cdoor.place(x = 950, y = 400)
+    mdoor = Button(window, image=door, command=marea)
+    mdoor.place(x = 800, y = 100)
+    sdoor = Button(window, image = door)
+    sdoor.place(x = 200, y = 100)
+    adoor = Button(window, image = door)
+    adoor.place(x = 50, y = 400)
+    cdoor = Button(window, image = door)
+    cdoor.place(x = 950, y = 400)
     THEdoor = Button(window, image = door)
     THEdoor.place(x = 500, y = 50)
 
@@ -417,11 +416,51 @@ def beginning():
     profile()
     vdialogue()
 
+def tgunlock():
+    global textbox
+    global tg
+    if sum(lvls) == 1:
+        textbox_image = Image.open("sprites/textbox.png")
+        textbox = ImageTk.PhotoImage(textbox_image)
+        thetextbox = Button(window, image=textbox, command = lobby)
+        thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
+        text1 = Label(window, text = "training grounds is now unlocked")
+        text1.place(relx=0.5, y = 700 ,anchor=CENTER)
+        tg = TRUE
+    else:
+        lobby()
+
+def tgicon():
+    global window
+    global tgimg
+    tg_image = Image.open("sprites/tg.png")
+    rtg_image = tg_image.resize((150, 150))
+    tgimg = ImageTk.PhotoImage(rtg_image)
+    tgicon = Button(window, image=tgimg, command = tgverify)
+    tgicon.place(x= 1000, y = 30)
+
+def tgverify():
+    global textbox
+    if tg == TRUE:
+        traininggrounds()
+    else:
+        textbox_image = Image.open("sprites/textbox.png")
+        textbox = ImageTk.PhotoImage(textbox_image)
+        thetextbox = Button(window, image=textbox, command = lobby)
+        thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
+        text1 = Label(window, text = "learn spells to access training grounds")
+        text1.place(relx=0.5, y = 700 ,anchor=CENTER)
+
+def traininggrounds():
+    for widget in window.winfo_children():
+        widget.destroy()
+
 def lobby():
     for widget in window.winfo_children():
         widget.destroy()
     doors()
     profile()
+    tgicon()
 
 beginning()
 
