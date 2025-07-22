@@ -6,6 +6,7 @@ import pygame
 from pygame.locals import *
 from pygame import mixer
 import time
+import json
 
 mixer.init()
 correct = mixer.Sound("sounds/correct.mp3")
@@ -49,8 +50,17 @@ stats = ['attack', 'defence', 'luck', 'health']
 image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", "sprites/health.png"]
 image_references = []
 
+# class Areas():
+#         def __init__(self, area):
+#         self.area = area
+
 tg = FALSE
 # tg = TRUE
+
+# class Quiz():
+#     def __init__(self, number1, number2): #numbers for the math question
+#             self.number1 = number1
+#             self.number2 = number2
 
 def loadicons():
     global photo
@@ -114,6 +124,7 @@ def mathquiz():
     global window
     global result
     global mcount
+    global manswer
     window.destroy()
     window = Tk()
     window.title("maths question")
@@ -123,91 +134,7 @@ def mathquiz():
     window.resizable(False,False)
     mcount = 15
     result = 0 
-    #general class for math questions and addition
-    class Maths():
-        def __init__(self, number1, number2): #numbers for the math question
-            self.number1 = number1
-            self.number2 = number2
-            
-        def question(self):
-            #displays questions
-            return f"what is {self.number1} + {self.number2}"
-        
-        def answer(self):
-            global result
-            try:
-                answer = int(manswer.get()) #get the number from the input
-                if answer == (self.number1)+ (self.number2):
-                    result = TRUE
-                    return "correct!"
-                else:
-                    result = FALSE
-                    return f"sorry...\nthe answer was {self.number1 + self.number2}"
-            except: #for non-integer inputs
-                result = FALSE
-                return f"sorry...\nthe answer was {self.number1 + self.number2}"
 
-    #category for subtraction questions
-    class Subtraction(Maths):
-        def question(self):
-                #displays questions
-                return f"what is {self.number1} - {self.number2}"
-            
-        def answer(self):
-            global result
-            try:
-                answer = int(manswer.get()) #get the number from the input
-                if answer == self.number1 - self.number2:
-                    result = TRUE
-                    return "correct!"
-                else:
-                    result = FALSE
-                    return f"sorry...the answer was {self.number1 - self.number2}"
-            except: #for non-integer inputs
-                result = FALSE
-                return f"sorry...the answer was {self.number1 - self.number2}"
-            
-    #category for multiplication questions (only allows for numbers from 1 to 5)
-    class Multiplication(Maths):
-        def question(self):
-            #displays question
-            return f"what is {self.number1} x {self.number2}"
-            
-        def answer(self):
-            global result
-            try:
-                answer = int(manswer.get()) #gets number from input
-                if answer == self.number1 * self.number2:
-                    result = TRUE
-                    return "correct!"
-                else:
-                    result = FALSE
-                    return f"sorry...\nthe answer was {self.number1 * self.number2}"
-            except: #for non-integer inputs
-                result = FALSE
-                return f"sorry...\nthe answer was {self.number1 * self.number2}"
-
-    #category for division questions   
-    class Division(Maths):
-        def question(self):
-            #displays question
-            return f"what is {self.number1} / {self.number2}"
-        def answer(self):
-            global result
-            try:
-                answer = int(manswer.get()) # gets number from input
-                if answer == self.number1/self.number2:
-                    result = TRUE
-                    return "correct!"
-                else:
-                    result = FALSE
-                    return f"sorry...\nthe answer was {self.number1 / self.number2}"
-            except: #for non-integer inputs
-                result = FALSE
-                return f"sorry...\nthe answer was {self.number1 / self.number2}"
-            
-    subjects = [Maths, Subtraction, Multiplication, Division] #lists of subjects to refer to 
-            
     def askquestion():
         text1 = Label(window, text=question.question(), font=("DotGothic16", 20, "bold"))
         text1.grid(row=1, column=0, padx = 15, sticky="w")
@@ -220,7 +147,7 @@ def mathquiz():
         if result == TRUE:
             mixer.Sound.play(correct)
         else: mixer.Sound.play(incorrect)
-        check.config(text = "continue", command = leave)
+        check.config(text = "continue", command = question.leave)
         mcount = "done"
 
     def countdown():
@@ -237,50 +164,9 @@ def mathquiz():
         except:
             timer.grid_forget
 
-    def leave():
-        global window
-        global mlock
-        global locks
-        global lvls
-        global xpmultiplier
-        if lvls[0] == 0:
-            if result == TRUE:
-                window.after_cancel(after_id)
-                mlock -= 1
-                locks = [mlock, alock, slock, clock]
-                marea()
-            else: 
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("maths question")
-                window.geometry("400x150")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                mathquiz()
-        else: 
-            if result == TRUE:
-                window.after_cancel(after_id)
-                lvls[0] += 1 * xpmultiplier
-                locks = [mlock, alock, slock, clock]
-                window.destroy()
-                windowsetup()
-                traininggrounds()
-            else:
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("maths question")
-                window.geometry("400x150")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                mathquiz()
-
     def enterbutton(event):
         if mcount == "done":
-            leave()
+            question.leave()
         else:
             checkanswer()
 
@@ -328,6 +214,147 @@ def mathquiz():
     check = Button(window, text="check", command=checkanswer)
     check.grid(row=3, column=0, sticky="w", padx=20)
 
+class Maths():
+    def __init__(self, number1, number2): #numbers for the math question
+        self.number1 = number1
+        self.number2 = number2
+        
+    def question(self):
+        #displays questions
+        return f"what is {self.number1} + {self.number2}"
+    
+    def answer(self):
+        global result
+        try:
+            answer = int(manswer.get()) #get the number from the input
+            if answer == (self.number1)+ (self.number2):
+                result = TRUE
+                return "correct!"
+            else:
+                result = FALSE
+                return f"sorry...\nthe answer was {self.number1 + self.number2}"
+        except: #for non-integer inputs
+            result = FALSE
+            return f"sorry...\nthe answer was {self.number1 + self.number2}"
+    
+    def leave(self):
+        global window
+        global mlock
+        global locks
+        global lvls
+        global xpmultiplier
+        global after_id
+        if lvls[0] == 0:
+            if result == TRUE:
+                window.after_cancel(after_id)
+                mlock -= 1
+                locks = [mlock, alock, slock, clock]
+                marea()
+            else: 
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("maths question")
+                window.geometry("400x150")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                mathquiz()
+        else: 
+            if result == TRUE:
+                window.after_cancel(after_id)
+                lvls[0] += 1 * xpmultiplier
+                locks = [mlock, alock, slock, clock]
+                window.destroy()
+                windowsetup()
+                traininggrounds()
+            else:
+                window.after_cancel(after_id)
+                window.destroy()
+                window = Tk()
+                window.title("maths question")
+                window.geometry("400x150")
+                window.option_add("*Background", "#000000")
+                window.config(bg="#000000")
+                window.resizable(False,False)
+                mathquiz()
+
+#category for subtraction questions
+class Subtraction(Maths):
+    def question(self):
+            #displays questions
+            return f"what is {self.number1} - {self.number2}"
+        
+    def answer(self):
+        global result
+        try:
+            answer = int(manswer.get()) #get the number from the input
+            if answer == self.number1 - self.number2:
+                result = TRUE
+                return "correct!"
+            else:
+                result = FALSE
+                return f"sorry...the answer was {self.number1 - self.number2}"
+        except: #for non-integer inputs
+            result = FALSE
+            return f"sorry...the answer was {self.number1 - self.number2}"
+        
+#category for multiplication questions (only allows for numbers from 1 to 5)
+class Multiplication(Maths):
+    def question(self):
+        #displays question
+        return f"what is {self.number1} x {self.number2}"
+        
+    def answer(self):
+        global result
+        try:
+            answer = int(manswer.get()) #gets number from input
+            if answer == self.number1 * self.number2:
+                result = TRUE
+                return "correct!"
+            else:
+                result = FALSE
+                return f"sorry...\nthe answer was {self.number1 * self.number2}"
+        except: #for non-integer inputs
+            result = FALSE
+            return f"sorry...\nthe answer was {self.number1 * self.number2}"
+
+#category for division questions   
+class Division(Maths):
+    def question(self):
+        #displays question
+        return f"what is {self.number1} / {self.number2}"
+    def answer(self):
+        global result
+        try:
+            answer = int(manswer.get()) # gets number from input
+            if answer == self.number1/self.number2:
+                result = TRUE
+                return "correct!"
+            else:
+                result = FALSE
+                return f"sorry...\nthe answer was {self.number1 / self.number2}"
+        except: #for non-integer inputs
+            result = FALSE
+            return f"sorry...\nthe answer was {self.number1 / self.number2}"
+        
+subjects = [Maths, Subtraction, Multiplication, Division] #lists of subjects to refer to 
+
+class Questions():
+    def __init__(self, theanswer): #numbers for the math question
+        self.theanswer = theanswer
+
+    def leave(self):
+        
+    
+class Animals(Questions):
+
+class Shapes(Questions):
+
+class Colours(Questions):
+
+qsubjects = [Animals, Shapes, Colours]
+
 def animalsquiz():
     global window
     global result
@@ -339,11 +366,14 @@ def animalsquiz():
     window.option_add("*Background", "#000000")
     window.config(bg="#000000")
     window.resizable(False,False)
+
+    animals = ['Bear','Bird','Cat','Dog','Fox','Horse', 'Penguin', 'Raccoon']
+    animal = random.randint(0,7)
+
+    qsubject = qsubjects[0](animals[animal])
     acount = 15
     result = 0 
 
-    #placement for user answers
-    animals = ['Bear','Bird','Cat','Dog','Fox','Horse', 'Penguin', 'Raccoon']
     acount = 15
 
     def leave():
@@ -400,8 +430,6 @@ def animalsquiz():
                 animalanswer()
         except:
             timer.grid_forget
-
-    animal = random.randint(0,7)
 
     def enterbutton(event):
         if acount == "done":
@@ -932,7 +960,6 @@ def combatsetup():
     for widget in window.winfo_children():
         widget.destroy()
     
-
 def lobby():
     for widget in window.winfo_children():
         widget.destroy()
