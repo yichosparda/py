@@ -22,10 +22,10 @@ xpmultiplier = 1
 
 subjectindex = 'none'
 
-mlock = 5
-alock = 5
-slock = 5
-clock = 5
+mlock = 3
+alock = 3
+slock = 3
+clock = 3
 locks = [mlock, alock, slock, clock]
 
 qsubjects = ["maths", "animal", "shape", "colour"]
@@ -50,17 +50,7 @@ stats = ['attack', 'defence', 'luck', 'health']
 image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", "sprites/health.png"]
 image_references = []
 
-# class Areas():
-#         def __init__(self, area):
-#         self.area = area
-
-tg = FALSE
-# tg = TRUE
-
-# class Quiz():
-#     def __init__(self, number1, number2): #numbers for the math question
-#             self.number1 = number1
-#             self.number2 = number2
+tg = TRUE
 
 def loadicons():
     global photo
@@ -75,12 +65,15 @@ def loadicons():
 
 def windowsetup():
     global window
+    global textbox
     window = Tk()
     window.title("")
     window.geometry("1200x900")
     window.option_add("*Background", "#000000")
     window.config(bg="#000000")
     window.resizable(False,False)
+    textbox_image = Image.open("sprites/textbox.png")
+    textbox = ImageTk.PhotoImage(textbox_image)
 windowsetup()
 
 def vdialogue():
@@ -92,8 +85,6 @@ def vdialogue():
     v = ImageTk.PhotoImage(v_image)
     vphoto = Label(window, image = v)
     vphoto.place(x = 700, y = 200)
-    textbox_image = Image.open("sprites/textbox.png")
-    textbox = ImageTk.PhotoImage(textbox_image)
     thetextbox = Button(window, image=textbox, command = nexttext)
     thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
     vtext = Label(window, text = dialogue[dialoguenum])
@@ -107,7 +98,7 @@ def nexttext():
     if dialoguenum == 3:
         lobby()
         dialoguenum +=1
-    elif dialoguenum == 5:
+    elif dialoguenum == 4:
         for widget in window.winfo_children():
             widget.destroy()
         profile()
@@ -340,21 +331,6 @@ class Division(Maths):
         
 subjects = [Maths, Subtraction, Multiplication, Division] #lists of subjects to refer to 
 
-class Questions():
-    def __init__(self, theanswer): #numbers for the math question
-        self.theanswer = theanswer
-
-    def leave(self):
-        
-    
-class Animals(Questions):
-
-class Shapes(Questions):
-
-class Colours(Questions):
-
-qsubjects = [Animals, Shapes, Colours]
-
 def animalsquiz():
     global window
     global result
@@ -370,11 +346,8 @@ def animalsquiz():
     animals = ['Bear','Bird','Cat','Dog','Fox','Horse', 'Penguin', 'Raccoon']
     animal = random.randint(0,7)
 
-    qsubject = qsubjects[0](animals[animal])
     acount = 15
     result = 0 
-
-    acount = 15
 
     def leave():
         global window
@@ -765,8 +738,8 @@ def areasetup():
 
 def profile():
     global nero
-    global window
     global neropfp
+    global window
     nero_image = Image.open("sprites/nero.png")
     rnero_image = nero_image.resize((100, 100))
     nero = ImageTk.PhotoImage(rnero_image)
@@ -782,7 +755,7 @@ def marea():
     window.destroy()
     windowsetup()
     profile()
-    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
     else:
         areasetup()
@@ -794,7 +767,7 @@ def aarea():
     window.destroy()
     windowsetup()
     profile()
-    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
     else:
         areasetup()
@@ -806,7 +779,7 @@ def sarea():
     window.destroy()
     windowsetup()
     profile()
-    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
     else:
         areasetup()
@@ -818,7 +791,7 @@ def carea():
     window.destroy()
     windowsetup()
     profile()
-    if mlock == 5 and slock ==5 and clock ==5 and alock ==5:
+    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
     else:
         areasetup()
@@ -957,8 +930,30 @@ def tgsetup():
     combatdesc.pack()
 
 def combatsetup():
+    global nero
+    global window
+    global textbox
     for widget in window.winfo_children():
         widget.destroy()
+
+    
+
+    thetextbox = Label(window, image=textbox)
+    thetextbox.place(relx=0.5, y = 100 ,anchor=CENTER)
+
+    combattext = Label(window, text = "player turn")
+    combattext.place(relx=0.5, y=100, anchor=CENTER)
+
+    nero_image = Image.open("sprites/nero.png")
+    rnero_image = nero_image.resize((150, 150))
+    nero = ImageTk.PhotoImage(rnero_image)
+    combatpfp = Label(window, image=nero)
+    combatpfp.place(x = 50, y = 700)
+
+
+# class Enemy():
+#     def __init__(self, name):
+#         self.name = enemyname
     
 def lobby():
     for widget in window.winfo_children():
