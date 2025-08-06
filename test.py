@@ -65,7 +65,7 @@ stats = ['attack', 'defence', 'luck', 'health'] #player stats
 image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", "sprites/health.png"]
 image_references = [] #storing images to prevent garbage collection
 
-tg = TRUE #whether or not training grounds is unlocked
+tg = FALSE #whether or not training grounds is unlocked
 
 class Background():
     def __init__(self, index):
@@ -131,7 +131,7 @@ def nexttext():
     if dialoguenum == 3:
         lobby()
         dialoguenum +=1
-    elif dialoguenum == 4:
+    elif dialoguenum == 5:
         for widget in window.winfo_children():
             widget.destroy()
         profile()
@@ -758,6 +758,9 @@ def areasetup():
     global subjectindex
     global lock
     global lectern
+    global currentbg
+    currentbg = Background(2)
+    currentbg.load()
     if locks[subjectindex] > 0:
         lock_image = Image.open("sprites/lock.png")
         lock = ImageTk.PhotoImage(lock_image)
@@ -791,7 +794,7 @@ def marea():
     currentbg.load()
 
     profile()
-    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
+    if mlock == 3 and slock ==3 and clock ==3 and alock ==3:
         vdialogue()
     else:
         areasetup()
@@ -806,7 +809,7 @@ def aarea():
     currentbg = Background(2)
     currentbg.load()
     profile()
-    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
+    if mlock == 3 and slock ==3 and clock ==3 and alock ==3:
         vdialogue()
     else:
         areasetup()
@@ -821,7 +824,7 @@ def sarea():
     currentbg = Background(2)
     currentbg.load()
     profile()
-    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
+    if mlock == 3 and slock ==3 and clock ==3 and alock ==3:
         vdialogue()
     else:
         areasetup()
@@ -836,7 +839,7 @@ def carea():
     currentbg = Background(2)
     currentbg.load()
     profile()
-    if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
+    if mlock == 3 and slock ==3 and clock ==3 and alock ==3:
         vdialogue()
     else:
         areasetup()
@@ -958,8 +961,11 @@ def tgverify():
 
 def traininggrounds():
     global lvls
+    global currentbg
     for widget in window.winfo_children():
             widget.destroy()
+    currentbg = Background(3)
+    currentbg.load()
     if sum(lvls) == 4:
         vdialogue()
     else:
@@ -969,6 +975,9 @@ def traininggrounds():
 
 def tgsetup():
     global lvls
+    global currentbg
+    currentbg = Background(3)
+    currentbg.load()
     statlist = Label(window, text=f"attack lvl = {lvls[0]}     defence lvl = {lvls[1]}     luck lvl = {lvls[2]}      health lvl = {lvls[3]}")
     statlist.pack(pady=20)
     loadicons()
@@ -999,8 +1008,13 @@ class Combatmenu():
         global tk_image
         global theplayer
         global lvls
+        
         for widget in window.winfo_children():
             widget.destroy()
+
+        global currentbg
+        currentbg = Background(4)
+        currentbg.load()
 
         image_path = "sprites/healthbar.png"
         pil_image = Image.open(image_path)
