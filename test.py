@@ -8,49 +8,74 @@ from pygame import mixer
 import time
 import json
 
+#loading sound effects
 mixer.init()
 correct = mixer.Sound("sounds/correct.mp3")
 incorrect = mixer.Sound("sounds/incorrect.mp3")
 
+#stores backgrounds
+backgrounds = ['startup','lobbybg', 'tutarea', 'tg', 'combat']
+
+#storing enemy and enemy types
+enemies = ['slime', 'zombie', 'skeleton', 'cerberus']
+enemyhp = [random.randint(50,60), random.randint(70,90), random.randint(100,120), 500] #randomises enemy hp to some extent
+enemyatk = [20, 30, 45, 200]
+
+#skill/quiz/spell levels for player
+#saved using json
 alvl = 0
 slvl = 0
 mlvl = 0
 clvl = 0
-lvls = [mlvl, alvl, slvl, clvl]
+lvls = [mlvl, alvl, slvl, clvl] #storing levels to refer to later 
 
-xpmultiplier = 1
+xpmultiplier = 1 #multiplies xp gained after and enemy level/strength
 
-subjectindex = 'none'
+subjectindex = 'none' #determines type of quiz
 
+#completion level of each tutorial stage
+#save using json
 mlock = 3
 alock = 3
 slock = 3
 clock = 3
-locks = [mlock, alock, slock, clock]
+locks = [mlock, alock, slock, clock] #storing completion levels
 
-qsubjects = ["maths", "animal", "shape", "colour"]
+qsubjects = ["maths", "animal", "shape", "colour"] #types of quizes
 
-dialoguenum = 0
-dialogue = ["hi vro u can call me v the overseer of this so called dungeon", 
+dialoguenum = 0 #dialogue process/index
+#dialogue dictionary
+dialogue = ["hi vr", 
             "u want to escape?"
             "\n well ur gonna have to fight that big dog cerberus past that door at the end of the hallway "
             "\n but ur definitely too weak rn so ur gonna have to learn a few combat spells from the lecterns scattered around this place", 
             "u can check ur stats by clicking ur profile on the top left "
             "\n and train your spells at the training grounds when u learn some, "
-            "\n good luck out there", 
+            "\n good luck", 
             "", 
             'well this is a surprise, i guess ill have to break the locks for u '
             '\nbut ur gonna need to lend me some of ur energy since im a bit frail in this form',
             "this is the training grounds, i'd say u need to be at least level 20 in all ur stats to face cerberus",
             "u could also find some stray demons around to test ur abilities by pressing the combat trial button"]
 
-spells = ['offensive', 'defensive', 'tactical', 'supportive']
-stats = ['attack', 'defence', 'luck', 'health']
+spells = ['offensive', 'defensive', 'tactical', 'supportive'] #types of spells
+stats = ['attack', 'defence', 'luck', 'health'] #player stats
 
+#paths for loading stat icons later
 image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", "sprites/health.png"]
-image_references = []
+image_references = [] #storing images to prevent garbage collection
 
-tg = TRUE
+tg = TRUE #whether or not training grounds is unlocked
+
+class Background():
+    def __init__(self, index):
+        self.index = index
+    
+    def load(self):
+        global bgimage
+        bgimage=ImageTk.PhotoImage(Image.open(f'backgrounds/{backgrounds[self.index]}.png'))
+        currentbg = Label(window, image=bgimage)
+        currentbg.place(anchor=CENTER, relx=0.5, rely=0.5)
 
 def loadicons():
     global photo
@@ -74,6 +99,7 @@ def windowsetup():
     window.resizable(False,False)
     textbox_image = Image.open("sprites/textbox.png")
     textbox = ImageTk.PhotoImage(textbox_image)
+    
 windowsetup()
 
 def vdialogue():
@@ -81,14 +107,21 @@ def vdialogue():
     global v
     global window
     global vtext
-    v_image = Image.open("sprites/v.png")
-    v = ImageTk.PhotoImage(v_image)
-    vphoto = Label(window, image = v)
-    vphoto.place(x = 700, y = 200)
+    global vbg
+    global currentbg
+    global backgrounds
+
+    v = ImageTk.PhotoImage(Image.open("sprites/v.png"))
+    vbg = ImageTk.PhotoImage(Image.open(f"backgrounds/{backgrounds[currentbg.index]}.png")) 
+    canvas = Canvas(window, width = 1200, height=900, highlightthickness=0)
+    canvas.create_image(1200, 900, image=vbg, anchor = SE)
+    canvas.create_image(1200, 900, image=v,anchor = SE)
+    canvas.place(anchor=CENTER, relx=0.5, rely=0.5)
+
     thetextbox = Button(window, image=textbox, command = nexttext)
-    thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
+    thetextbox.place(relx=0.5, rely = 0.82 ,anchor=CENTER)
     vtext = Label(window, text = dialogue[dialoguenum])
-    vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
+    vtext.place(relx=0.5, rely=0.82 ,anchor=CENTER)
 
 def nexttext():
     global dialoguenum
@@ -741,12 +774,11 @@ def profile():
     global neropfp
     global window
     nero_image = Image.open("sprites/nero.png")
-    rnero_image = nero_image.resize((100, 100))
-    nero = ImageTk.PhotoImage(rnero_image)
+    nero = ImageTk.PhotoImage(nero_image)
     neropfp = Button(window, image=nero, command = showstats)
     neropfp.place(x= 30, y = 30)
-    nerotext = Label(window, text="stats")
-    nerotext.place(x=30, y=150)
+    # nerotext = Label(window, text="stats")
+    # nerotext.place(x=30, y=150)
 
 def marea():
     global window
@@ -754,6 +786,10 @@ def marea():
     subjectindex = 0
     window.destroy()
     windowsetup()
+    global currentbg
+    currentbg = Background(2)
+    currentbg.load()
+
     profile()
     if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
@@ -766,6 +802,9 @@ def aarea():
     subjectindex = 1
     window.destroy()
     windowsetup()
+    global currentbg
+    currentbg = Background(2)
+    currentbg.load()
     profile()
     if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
@@ -778,6 +817,9 @@ def sarea():
     subjectindex = 2
     window.destroy()
     windowsetup()
+    global currentbg
+    currentbg = Background(2)
+    currentbg.load()
     profile()
     if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
@@ -790,6 +832,9 @@ def carea():
     subjectindex = 3
     window.destroy()
     windowsetup()
+    global currentbg
+    currentbg = Background(2)
+    currentbg.load()
     profile()
     if mlock == 1 and slock ==1 and clock ==1 and alock ==1:
         vdialogue()
@@ -817,20 +862,29 @@ def fintut():
         vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
 
 def doors():
-    global door
+    global mdoor
+    global sdoor
+    global cdoor
+    global adoor
     global window
-    door_image = Image.open("sprites/door.png")
-    door = ImageTk.PhotoImage(door_image)
-    mdoor = Button(window, image=door, command=marea)
-    mdoor.place(x = 800, y = 100)
-    sdoor = Button(window, image = door, command= sarea)
-    sdoor.place(x = 200, y = 100)
-    adoor = Button(window, image = door, command=aarea)
-    adoor.place(x = 50, y = 400)
-    cdoor = Button(window, image = door, command= carea)
-    cdoor.place(x = 950, y = 400)
-    THEdoor = Button(window, image = door)
-    THEdoor.place(x = 500, y = 50)
+    global bdoor
+    global dialoguenum
+    
+    bdoor = ImageTk.PhotoImage(Image.open('sprites/bossdoor.png'))
+    thebdoor = Button(window, image=bdoor, width=260, height=356, state=DISABLED)
+    thebdoor.place(anchor=CENTER, relx=0.5, rely=0.3)
+    sdoor = ImageTk.PhotoImage(Image.open('sprites/sdoor.png'))
+    thesdoor = Button(window, image=sdoor, width=173, height=503, command=sarea)
+    thesdoor.place(anchor=CENTER, relx=0.28, rely=0.452)
+    mdoor = ImageTk.PhotoImage(Image.open('sprites/mdoor.png'))
+    themdoor = Button(window, image=mdoor, width=173, height=503, command=marea)
+    themdoor.place(anchor=CENTER, relx=0.72, rely=0.452)
+    adoor = ImageTk.PhotoImage(Image.open('sprites/adoor.png'))
+    theadoor = Button(window, image=adoor, width=164, height=644, command=aarea)
+    theadoor.place(anchor=CENTER, relx=0.0725, rely=0.635)
+    cdoor = ImageTk.PhotoImage(Image.open('sprites/cdoor.png'))
+    thecdoor = Button(window, image=cdoor, width=164, height=644, command=carea)
+    thecdoor.place(anchor=CENTER, relx=0.9275, rely=0.635)
 
 def showstats():
     global window
@@ -861,6 +915,9 @@ def closestats():
     neropfp.config(command = showstats)
 
 def beginning():
+    global currentbg
+    currentbg=Background(0)
+    currentbg.load()
     profile()
     vdialogue()
 
@@ -924,40 +981,248 @@ def tgsetup():
         desc.pack()
     combatfrm = Frame(window)
     combatfrm.pack(anchor=CENTER)
-    combatstart = Button(combatfrm, text="combat trial", command=combatsetup)
+    location = Combatmenu('training grounds')
+    combatstart = Button(combatfrm, text="combat trial", command=location.combatsetup)
     combatstart.pack()
     combatdesc = Label(combatfrm, text= "use combination of all spells to face off minor enemies\n offers double xp")
     combatdesc.pack()
 
-def combatsetup():
-    global nero
-    global window
-    global textbox
-    for widget in window.winfo_children():
-        widget.destroy()
-
+class Combatmenu():
+    def __init__(self, area):
+        self.area = area
     
+    def combatsetup(self):
+        global enemy
+        global nero
+        global combatbox
+        global combatmenu
+        global tk_image
+        global theplayer
+        global lvls
+        for widget in window.winfo_children():
+            widget.destroy()
 
-    thetextbox = Label(window, image=textbox)
-    thetextbox.place(relx=0.5, y = 100 ,anchor=CENTER)
+        image_path = "sprites/healthbar.png"
+        pil_image = Image.open(image_path)
+        tk_image = ImageTk.PhotoImage(pil_image)
 
-    combattext = Label(window, text = "player turn")
-    combattext.place(relx=0.5, y=100, anchor=CENTER)
+        enemytype = random.randint(0,2)
+        # enemy = Enemy(enemies[enemytype],(enemyhp[enemytype]), random.randint(1,3))
+        enemy = Enemy(enemies[enemytype],enemyhp[enemytype], 3, enemyatk[enemytype])
+        enemy.displayenemy()
 
-    nero_image = Image.open("sprites/nero.png")
-    rnero_image = nero_image.resize((150, 150))
-    nero = ImageTk.PhotoImage(rnero_image)
-    combatpfp = Label(window, image=nero)
-    combatpfp.place(x = 50, y = 700)
+        combat_image = Image.open("sprites/combattext.png")
+        combatbox = ImageTk.PhotoImage(combat_image)
+        thetextbox = Label(window, image=combatbox)
+        thetextbox.place(relx=0.5, y = 100 ,anchor=CENTER)
+        combattext = Label(window, text = "player turn")
+        combattext.place(relx=0.5, y=100, anchor=CENTER)
 
+        menu_image = Image.open("sprites/combatmenu.png")
+        combatmenu = ImageTk.PhotoImage(menu_image)
+        thecmenu = Label(window, image=combatmenu)
+        thecmenu.place(relx=0.5, rely=0.82 ,anchor=CENTER)
+        # theplayer = Player(50+10*clvl, 10+10*mlvl)
+        theplayer = Player(80+lvls[3], 5+lvls[0], lvls[2])
+        theplayer.displayhealthbar()
+        theplayer.playerturn()
 
-# class Enemy():
-#     def __init__(self, name):
-#         self.name = enemyname
+class Player():
+    def __init__(self, health, attack, luck):
+        self.health = health
+        self.attack = attack
+        self.luck = luck
+        # self.defence = defence
+    
+    def displayhealthbar(self):
+        global hpbar_image
+        global pcurrent_health
+        pcurrent_health = self.health
+        image_path = "sprites/phealthbar.png"
+        pil_image = Image.open(image_path)
+        hpbar_image = ImageTk.PhotoImage(pil_image)
+        canvas = Canvas(window, width=502, height=50, highlightthickness=0)
+        canvas.place(anchor=CENTER, relx=0.43, rely=0.8)
+        canvas.create_image(253, 27, image=hpbar_image)
+        canvas.create_rectangle(15, 15, 490, 40, fill="brown", tags="health_bar")
+        hpamount = Label(window, text=f'{pcurrent_health}/{self.health}')
+        hpamount.place(anchor=CENTER, relx=0.67, rely=0.8)
+    
+    def updatehp(self):
+        global pcurrent_health
+        healthbars[self.index].delete("health_bar")
+        health_ratio = enemy_currenthp[self.index] / self.maxhp
+        bar_width = 290 * health_ratio
+        healthbars[self.index].create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
+
+    def takedamage(self):
+        global pcurrent_health
+        global enemy_currenthp
+        global enemy
+        global theplayer
+        pcurrent_health -= enemy.attack
+        if pcurrent_health <= 0:
+            pcurrent_health = 0
+            # .place_forget()
+            allenemies[self.index].place_forget()
+        else:
+            self.updatehp()
+
+    def playerturn(self):
+        global playermenu
+        playermenu = Frame(window)
+        playermenu.place(relx=0.5, rely=0.82, anchor=CENTER)
+        atk = Button(playermenu, text='attack', command=self.playerattack)
+        atk.pack()
+        heal = Button(playermenu, text="heal")
+        heal.pack()
+    
+    def playerattack(self):
+        global enemy
+        global enemymenu
+        playermenu.place_forget()
+        enemymenu = Frame(window)
+        enemymenu.place(relx=0.5, rely=0.82, anchor=CENTER)
+        if enemy.amount == 2:
+            e1button = Button(enemymenu, text = f'left {enemy.name}',command=hpbar1.takedamage)
+            e1button.pack()
+            e2button = Button(enemymenu, text = f'right {enemy.name}', command=hpbar2.takedamage)
+            e2button.pack()
+        else:
+            e1button = Button(enemymenu, text=f'middle {enemy.name}',command=hpbar1.takedamage)
+            e1button.pack()
+            if enemy.amount ==3:
+                e2button = Button(enemymenu, text=f'left {enemy.name}', command=hpbar2.takedamage)
+                e2button.pack()
+                e3button = Button(enemymenu, text= f'right {enemy.name}', command=hpbar3.takedamage)
+                e3button.pack()
+        goback = Button(enemymenu, text='go back', command = self.playerreturn)
+        goback.pack()
+
+    def playerreturn(self):
+        global enemymenu
+        for widget in enemymenu.winfo_children():
+            widget.destroy() 
+        self.playerturn()
+
+class Enemy():
+    def __init__(self, name, health, amount, attack):
+        self.name = name
+        self.health = health
+        self.amount = amount
+        self.attack = attack
+    
+    def displayenemy(self):
+        global enemyimg
+        global healthbars
+        global enemy_currenthp
+        global hpbar1
+        global hpbar2
+        global hpbar3
+        global allenemies
+        healthbars = []
+        enemy_image = Image.open(f"sprites/{self.name}.png")
+        renemy_image = enemy_image.resize((300, 300))
+        enemyimg = ImageTk.PhotoImage(renemy_image)
+        enemy1 = Label(window, image=enemyimg)
+        enemy1.place(relx=0.5, rely=0.5, anchor=CENTER)
+        allenemies = [enemy1]
+        hpbar1 = Healthbar(self.health, 0)
+        hpbar1.createhealthbar()
+        hpbar1.displayhealthbar()
+        enemy_currenthp = [self.health]
+        if self.amount == 2:
+            enemy2 = Label(window, image=enemyimg)
+            enemy2.place(anchor=CENTER, relx = 0.7, rely= 0.5)
+            allenemies.append(enemy2)
+            hpbar2 = Healthbar(self.health, 1)
+            hpbar2.createhealthbar()
+            hpbar2.displayhealthbar()
+            enemy_currenthp.append(self.health)
+            enemy1.place(relx=0.3, rely=0.5, anchor=CENTER)
+        elif self.amount ==3:
+            enemy2 = Label(window, image=enemyimg)
+            enemy2.place(anchor=CENTER, relx = 0.8, rely = 0.5)
+            allenemies.append(enemy2)
+            hpbar2 = Healthbar(self.health, 1)
+            hpbar2.createhealthbar()
+            hpbar2.displayhealthbar()
+            enemy_currenthp.append(self.health)
+            enemy3 = Label(window, image = enemyimg)
+            enemy3.place(anchor=CENTER, relx = 0.2, rely=0.5)
+            allenemies.append(enemy3)
+            hpbar3=Healthbar(self.health, 2)
+            hpbar3.createhealthbar()
+            hpbar3.displayhealthbar()
+            enemy_currenthp.append(self.health)
+
+    def enemyturn(self):
+        for x in range(0, self.amount):
+            print('attacks')
+        
+
+class Healthbar():
+    def __init__(self, maxhp, index):
+        self.maxhp = maxhp
+        self.index = index
+    
+    def createhealthbar(self):
+        global tk_image
+        global enemy
+        global healthbars
+        canvas = Canvas(window, width=302, height=50, highlightthickness=0)
+        canvas.create_image(153, 27, image=tk_image)
+        canvas.create_rectangle(15, 15, 290, 40, fill="brown", tags='health_bar')
+        healthbars.append(canvas)
+    
+    def displayhealthbar(self):
+        global healthbars
+        global enemy
+        healthbars[self.index].place(anchor=CENTER, relx=0.5, rely=0.25)
+        if self.index == 1 and enemy.amount==2:
+            healthbars[self.index].place(anchor=CENTER, relx=0.7, rely=0.25)
+            healthbars[0].place(anchor=CENTER, relx=0.3, rely=0.25)
+        elif self.index == 2:
+            healthbars[self.index].place(anchor=CENTER, relx=0.2, rely=0.26)
+            healthbars[1].place(anchor=CENTER, relx=0.8, rely=0.26)
+            healthbars[0].place(anchor=CENTER, relx=0.5, rely=0.25)
+    
+    def updatehp(self):
+        global healthbars
+        global enemy_currenthp
+        healthbars[self.index].delete("health_bar")
+        health_ratio = enemy_currenthp[self.index] / self.maxhp
+        bar_width = 290 * health_ratio
+        healthbars[self.index].create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
+
+    def takedamage(self):
+        global allenemies
+        global enemy_currenthp
+        global healthbars
+        global enemy
+        global theplayer
+        enemy_currenthp[self.index] -= theplayer.attack
+        print(enemy_currenthp[self.index])
+        if enemy_currenthp[self.index] <= 0:
+            enemy_currenthp[self.index] = 0
+            healthbars[self.index].place_forget()
+            allenemies[self.index].place_forget()
+        else:
+            self.updatehp()
+        enemy.enemyturn()
+
+class Boss(Enemy):
+    def __init__(self):
+        pass
     
 def lobby():
+    global currentbg
+    global lobbybgimg
     for widget in window.winfo_children():
         widget.destroy()
+    currentbg=Background(1)
+    currentbg.load()
+    
     doors()
     profile()
     tgicon()
