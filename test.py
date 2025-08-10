@@ -12,6 +12,9 @@ import json
 mixer.init()
 correct = mixer.Sound("sounds/correct.mp3")
 incorrect = mixer.Sound("sounds/incorrect.mp3")
+select = mixer.Sound("sounds/select.mp3")
+death = mixer.Sound("sounds/death.mp3")
+boom = mixer.Sound("sounds/boom.mp3")
 
 #stores backgrounds
 backgrounds = ['startup','lobbybg', 'tutarea', 'tg', 'combat', 'tutstart']
@@ -822,8 +825,8 @@ def profile():
     global window
     nero_image = Image.open("sprites/nero.png")
     nero = ImageTk.PhotoImage(nero_image)
-    neropfp = Button(window, image=nero, command = showstats)
-    neropfp.place(x= 25, y = 25)
+    neropfp = Button(window, width =179, height=179, image=nero, command = showstats)
+    neropfp.place(x= 30, y = 30)
 
 def marea():
     global window
@@ -1048,7 +1051,7 @@ def tgsetup():
     combatfrm = Frame(window)
     combatfrm.pack(anchor=CENTER)
     location = Combatmenu('training grounds')
-    combatstart = Button(combatfrm, text="combat trial", command=location.combatsetup)
+    combatstart = Button(combatfrm, text="combat trial", command=location.innitcombat)
     combatstart.pack()
     combatdesc = Label(combatfrm, text= "use combination of all spells to face off minor enemies\n offers double xp")
     combatdesc.pack()
@@ -1057,19 +1060,29 @@ class Combatmenu():
     def __init__(self, area):
         self.area = area
     
-    def combatsetup(self):
-        global enemy
-        global nero
-        global combatbox
-        global combatmenu
-        global tk_image
+    def innitcombat(self):
         global theplayer
-        global lvls
+        global enemy
         global totalenemies
-        
+        # enemytype = random.randint(0,2)
+        enemytype = 1
+        # totalenemies = random.randint(1,2)
+        totalenemies = 2
+        if enemytype ==1:
+            enemy = Spiders(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
+        else:
+            enemy = Enemy(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
+        theplayer = Player(200+lvls[3], 30+lvls[0], lvls[2])
         for widget in window.winfo_children():
             widget.destroy()
+        self.combatsetup()
+        theplayer.playerturn()
 
+    def combatsetup(self):
+        global nero
+        global combatmenu
+        global tk_image
+        global lvls
         global currentbg
         currentbg = Background(4)
         currentbg.load()
@@ -1077,27 +1090,17 @@ class Combatmenu():
         image_path = "sprites/healthbar.png"
         pil_image = Image.open(image_path)
         tk_image = ImageTk.PhotoImage(pil_image)
-
-        # enemytype = random.randint(0,2)
-        enemytype = 0
-        totalenemies = random.randint(1,2)
-        enemy = Enemy(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
         enemy.displayenemy()
-
-        combat_image = Image.open("sprites/combattext.png")
-        combatbox = ImageTk.PhotoImage(combat_image)
-        thetextbox = Label(window, image=combatbox)
-        thetextbox.place(relx=0.5, y = 100 ,anchor=CENTER)
-        combattext = Label(window, text = "player turn")
-        combattext.place(relx=0.5, y=100, anchor=CENTER)
 
         menu_image = Image.open("sprites/combatmenu.png")
         combatmenu = ImageTk.PhotoImage(menu_image)
         thecmenu = Label(window, image=combatmenu)
         thecmenu.place(relx=0.5, rely=0.82 ,anchor=CENTER)
-        theplayer = Player(200+lvls[3], 30+lvls[0], lvls[2])
+
+        profile()
+        neropfp.place(x=63,y=645)
+
         theplayer.displayhealthbar()
-        theplayer.playerturn()
 
 class Player():
     def __init__(self, health, attack, luck):
@@ -1149,12 +1152,15 @@ class Player():
 
     def playerturn(self):
         global playermenu
+        try: thecanvas.delete('narration')
+        except: pass
         playermenu = Frame(window)
         playermenu.place(relx=0.5, rely=0.82, anchor=CENTER)
         atk = Button(playermenu, text='attack', command=self.playerattack)
         atk.pack()
         heal = Button(playermenu, text="heal", command=self.healhp)
         heal.pack()
+        thecanvas.create_text(600, 100, text="player turn", font=("DotGothic16", 20, "bold"), fill="white", tags='narration')
     
     def playerattack(self):
         global enemy
@@ -1191,36 +1197,43 @@ class Enemy():
         self.attack = attack
     
     def displayenemy(self):
-        global enemyimg
+        global enemy_image
         global healthbars
         global enemy_currenthp
         global hpbar1
         global hpbar2
         global allenemies
+        global combatbox
+        global thecanvas
+        thecanvas = Canvas(window, width=1200, height=900,)
+        thecanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+        thecanvas.create_image(0, 0, image=bgimage, anchor=NW)
         healthbars = []
-        enemy_image = Image.open(f"sprites/{self.name}.png")
-        enemyimg = ImageTk.PhotoImage(enemy_image)
-        enemy1 = Label(window, image=enemyimg)
-        enemy1.place(relx=0.5, rely=0.5, anchor=CENTER)
-        allenemies = [enemy1]
+        enemy_image = ImageTk.PhotoImage(Image.open(f"sprites/{self.name}.png"))
+        thecanvas.create_image(600, 500, image=enemy_image, tags='enemy1')
+        allenemies = ['enemy1']
         hpbar1 = Healthbar(self.health, 0)
         hpbar1.createhealthbar()
         hpbar1.displayhealthbar()
         enemy_currenthp = [self.health]
         if self.amount == 2:
-            enemy2 = Label(window, image=enemyimg)
-            enemy2.place(anchor=CENTER, relx = 0.7, rely= 0.5)
-            allenemies.append(enemy2)
+            thecanvas.create_image(840, 500, image=enemy_image, tags='enemy2')
+            allenemies.append('enemy2')
             hpbar2 = Healthbar(self.health, 1)
             hpbar2.createhealthbar()
             hpbar2.displayhealthbar()
             enemy_currenthp.append(self.health)
-            enemy1.place(relx=0.3, rely=0.5, anchor=CENTER)
+            thecanvas.delete('enemy1')
+            thecanvas.create_image(360, 500, image=enemy_image, tags='enemy1')
+        combatbox = ImageTk.PhotoImage(Image.open("sprites/combattext.png"))
+        thecanvas.create_image(600, 100, image=combatbox)
 
     def enemyturn(self):
         global enemymenu
         global playermenu
         global turnsleft
+        thecanvas.delete('narration')
+        thecanvas.create_text(600, 100, text="enemy turn", font=("DotGothic16", 20, "bold"), fill="white", tags='narration')
         try:
             enemymenu.destroy()
         except:
@@ -1246,6 +1259,39 @@ class Enemy():
         turnsleft -= 1
         theplayer.takedamage()
         window.after(1000, self.enemyattacks)
+
+class Spiders(Enemy):
+    def displayenemy(self):
+        global enemy_image
+        global healthbars
+        global enemy_currenthp
+        global hpbar1
+        global hpbar2
+        global allenemies
+        global combatbox
+        global thecanvas
+        thecanvas = Canvas(window, width=1200, height=900,)
+        thecanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+        thecanvas.create_image(0, 0, image=bgimage, anchor=NW)
+        healthbars = []
+        enemy_image = ImageTk.PhotoImage(Image.open(f"sprites/{self.name}.png"))
+        thecanvas.create_image(600, 350, image=enemy_image, tags='enemy1')
+        allenemies = ['enemy1']
+        hpbar1 = Healthbar(self.health, 0)
+        hpbar1.createhealthbar()
+        hpbar1.displayhealthbar()
+        enemy_currenthp = [self.health]
+        if self.amount == 2:
+            thecanvas.create_image(840, 350, image=enemy_image, tags='enemy2')
+            allenemies.append('enemy2')
+            hpbar2 = Healthbar(self.health, 1)
+            hpbar2.createhealthbar()
+            hpbar2.displayhealthbar()
+            enemy_currenthp.append(self.health)
+            thecanvas.delete('enemy1')
+            thecanvas.create_image(360, 350, image=enemy_image, tags='enemy1')
+        combatbox = ImageTk.PhotoImage(Image.open("sprites/combattext.png"))
+        thecanvas.create_image(600, 100, image=combatbox)
 
 class Healthbar():
     def __init__(self, maxhp, index):
@@ -1291,25 +1337,40 @@ class Healthbar():
         global healthbars
         global enemy
         global theplayer
+        global thecanvas
         global quizes
+        global hurtenemy
+        global location
+
         #insert tandom quizes here do this after dinner im going mad
         # quizes[random.randint(0,3)]()
+        location = thecanvas.coords(allenemies[self.index])
+        hurtenemy = ImageTk.PhotoImage(Image.open(f"sprites/hurt{enemy.name}.png"))
+        thecanvas.delete(allenemies[self.index])
+        thecanvas.create_image(location[0], location[1], image=hurtenemy, tags=allenemies[self.index])
+
         enemy_currenthp[self.index] -= theplayer.attack
         print(enemy_currenthp[self.index])
         if enemy_currenthp[self.index] <= 0:
+            mixer.Sound.play(death)
             enemy_currenthp[self.index] = 0
             healthbars[self.index].place_forget()
-            allenemies[self.index].place_forget()
+            thecanvas.delete(allenemies[self.index])
             newamount = enemy.amount - 1
-            # print(newamount)
             if newamount > 0 :
                 enemy.amount = newamount
                 enemy.enemyturn()
             else:
                 traininggrounds()
         else:
+            mixer.Sound.play(boom)
+            window.after(300, self.returnsprite)
             self.updatehp()
-            enemy.enemyturn()
+    
+    def returnsprite(self):
+        thecanvas.delete(allenemies[self.index])
+        thecanvas.create_image(location[0], location[1], image=enemy_image, tags=allenemies[self.index])
+        enemy.enemyturn()
 
 # class Boss(Enemy):
 #     def __init__(self):
