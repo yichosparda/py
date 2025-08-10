@@ -17,9 +17,9 @@ incorrect = mixer.Sound("sounds/incorrect.mp3")
 backgrounds = ['startup','lobbybg', 'tutarea', 'tg', 'combat', 'tutstart']
 
 #storing enemy and enemy types
-enemies = ['slime', 'zombie', 'skeleton', 'cerberus']
-enemyhp = [random.randint(50,60), random.randint(70,90), random.randint(100,120), 500] #randomises enemy hp to some extent
-enemyatk = [20, 30, 45, 200]
+enemies = ['slime', 'spider', 'cerberus']
+enemyhp = [random.randint(50,60), random.randint(70,90), 500] #randomises enemy hp to some extent
+enemyatk = [20, 30, 200]
 
 #skill/quiz/spell levels for player
 #saved using json
@@ -66,6 +66,8 @@ image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", 
 image_references = [] #storing images to prevent garbage collection
 
 tg = TRUE #whether or not training grounds is unlocked
+combat = FALSE #whether or not in combat
+questiontally = 0 #number of questions answered in combat
 
 class Background():
     def __init__(self, index):
@@ -80,10 +82,10 @@ class Background():
 def loadicons():
     global photo
     global image_references
-    global image_paths
+    global stats
     image_references.clear()
     for x in range(0,4):
-        img = Image.open(image_paths[x])
+        img = Image.open(f'sprites/{stats[x]}icon.png')
         img = img.resize((70, 70))
         photo = ImageTk.PhotoImage(img)
         image_references.append(photo)
@@ -93,7 +95,13 @@ def windowsetup():
     global textbox
     window = Tk()
     window.title("")
-    window.geometry("1200x900")
+    window_width = 1200
+    window_height = 900
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (window_width / 2))
+    y_coordinate = int((screen_height / 2) - (window_height / 2))
+    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
     window.option_add("*Background", "#000000")
     window.config(bg="#000000")
     window.resizable(False,False)
@@ -122,6 +130,8 @@ def vdialogue():
     thetextbox.place(relx=0.5, rely = 0.82 ,anchor=CENTER)
     vtext = Label(window, text = dialogue[dialoguenum])
     vtext.place(relx=0.5, rely=0.82 ,anchor=CENTER)
+    profile()
+    tgicon()
 
 def nexttext():
     global dialoguenum
@@ -152,7 +162,13 @@ def mathquiz():
     window.destroy()
     window = Tk()
     window.title("maths question")
-    window.geometry("400x150")
+    window_width = 450
+    window_height = 150
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (window_width / 2))
+    y_coordinate = int((screen_height / 2) - (window_height / 2))
+    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
     window.option_add("*Background", "#000000")
     window.config(bg="#000000")
     window.resizable(False,False)
@@ -371,7 +387,13 @@ def animalsquiz():
     window.destroy()
     window = Tk()
     window.title("animal question")
-    window.geometry("300x270")
+    window_width = 300
+    window_height = 270
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (window_width / 2))
+    y_coordinate = int((screen_height / 2) - (window_height / 2))
+    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
     window.option_add("*Background", "#000000")
     window.config(bg="#000000")
     window.resizable(False,False)
@@ -494,7 +516,13 @@ def shapesquiz():
     window.destroy()
     window = Tk()
     window.title("shape question")
-    window.geometry("300x270")
+    window_width = 300
+    window_height = 270
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (window_width / 2))
+    y_coordinate = int((screen_height / 2) - (window_height / 2))
+    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
     window.option_add("*Background", "#000000")
     window.config(bg="#000000")
     window.resizable(False,False)
@@ -631,7 +659,13 @@ def coloursquiz():
     window.destroy()
     window = Tk()
     window.title("colour question")
-    window.geometry("300x160")
+    window_width = 300
+    window_height = 160
+    screen_width = window.winfo_screenwidth()
+    screen_height = window.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (window_width / 2))
+    y_coordinate = int((screen_height / 2) - (window_height / 2))
+    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
     window.option_add("*Background", "#000000")
     window.config(bg="#000000")
     window.resizable(False,False)
@@ -764,6 +798,7 @@ def areasetup():
     global lvls
     currentbg = Background(2)
     currentbg.load()
+    profile()
     if locks[subjectindex] > 0:
         lock_image = Image.open("sprites/lock.png")
         lock = ImageTk.PhotoImage(lock_image)
@@ -788,9 +823,7 @@ def profile():
     nero_image = Image.open("sprites/nero.png")
     nero = ImageTk.PhotoImage(nero_image)
     neropfp = Button(window, image=nero, command = showstats)
-    neropfp.place(x= 30, y = 30)
-    # nerotext = Label(window, text="stats")
-    # nerotext.place(x=30, y=150)
+    neropfp.place(x= 25, y = 25)
 
 def marea():
     global window
@@ -869,7 +902,6 @@ def fintut():
         vtext = Label(window, text = f'congrats! you have learnt {spells[subjectindex]} spells u can now use them to increase your {stats[subjectindex]} stat')
         vtext.place(relx=0.5, y = 700 ,anchor=CENTER)
         lvls[subjectindex] = 1
-        print(lvls[subjectindex])
         theorb.destroy()
     else: 
         vtext = Label(window, text = 'spell already learnt')
@@ -882,21 +914,34 @@ def doors():
     global adoor
     global window
     global bdoor
+    global lvls
     global dialoguenum
     
     bdoor = ImageTk.PhotoImage(Image.open('sprites/bossdoor.png'))
     thebdoor = Button(window, image=bdoor, width=260, height=356, state=DISABLED)
     thebdoor.place(anchor=CENTER, relx=0.5, rely=0.3)
-    sdoor = ImageTk.PhotoImage(Image.open('sprites/sdoor.png'))
+    if lvls[2]==0:
+        sdoor = ImageTk.PhotoImage(Image.open('sprites/sdoor.png'))
+    else:
+        sdoor = ImageTk.PhotoImage(Image.open('sprites/offsdoor.png'))
     thesdoor = Button(window, image=sdoor, width=173, height=503, command=sarea)
     thesdoor.place(anchor=CENTER, relx=0.276, rely=0.458)
-    mdoor = ImageTk.PhotoImage(Image.open('sprites/mdoor.png'))
+    if lvls[0]==0:
+        mdoor = ImageTk.PhotoImage(Image.open('sprites/mdoor.png'))
+    else:
+        mdoor = ImageTk.PhotoImage(Image.open('sprites/offmdoor.png'))
     themdoor = Button(window, image=mdoor, width=173, height=503, command=marea)
     themdoor.place(anchor=CENTER, relx=0.724, rely=0.458)
-    adoor = ImageTk.PhotoImage(Image.open('sprites/adoor.png'))
+    if lvls[1]==0:
+        adoor = ImageTk.PhotoImage(Image.open('sprites/adoor.png'))
+    else:
+        adoor = ImageTk.PhotoImage(Image.open('sprites/offadoor.png'))
     theadoor = Button(window, image=adoor, width=164, height=646, command=aarea)
     theadoor.place(anchor=CENTER, relx=0.0725, rely=0.635)
-    cdoor = ImageTk.PhotoImage(Image.open('sprites/cdoor.png'))
+    if lvls[3]==0:
+        cdoor = ImageTk.PhotoImage(Image.open('sprites/cdoor.png'))
+    else:
+        cdoor = ImageTk.PhotoImage(Image.open('sprites/offcdoor.png'))
     thecdoor = Button(window, image=cdoor, width=164, height=646, command=carea)
     thecdoor.place(anchor=CENTER, relx=0.9275, rely=0.635)
 
@@ -932,7 +977,6 @@ def beginning():
     global currentbg
     currentbg=Background(0)
     currentbg.load()
-    profile()
     vdialogue()
 
 def tgunlock():
@@ -951,12 +995,14 @@ def tgunlock():
 
 def tgicon():
     global window
+    global dialoguenum 
     global tgimg
     tg_image = Image.open("sprites/tg.png")
-    rtg_image = tg_image.resize((150, 150))
-    tgimg = ImageTk.PhotoImage(rtg_image)
+    tgimg = ImageTk.PhotoImage(tg_image)
     tgicon = Button(window, image=tgimg, command = tgverify)
-    tgicon.place(x= 1000, y = 30)
+    tgicon.place(x= 985, y = 25)
+    if dialoguenum < 3:
+        tgicon.config(state=DISABLED)
 
 def tgverify():
     global textbox
@@ -1019,6 +1065,7 @@ class Combatmenu():
         global tk_image
         global theplayer
         global lvls
+        global totalenemies
         
         for widget in window.winfo_children():
             widget.destroy()
@@ -1031,9 +1078,10 @@ class Combatmenu():
         pil_image = Image.open(image_path)
         tk_image = ImageTk.PhotoImage(pil_image)
 
-        enemytype = random.randint(0,2)
-        # enemy = Enemy(enemies[enemytype],(enemyhp[enemytype]), random.randint(1,3))
-        enemy = Enemy(enemies[enemytype],enemyhp[enemytype], 3, enemyatk[enemytype])
+        # enemytype = random.randint(0,2)
+        enemytype = 0
+        totalenemies = random.randint(1,2)
+        enemy = Enemy(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
         enemy.displayenemy()
 
         combat_image = Image.open("sprites/combattext.png")
@@ -1047,8 +1095,7 @@ class Combatmenu():
         combatmenu = ImageTk.PhotoImage(menu_image)
         thecmenu = Label(window, image=combatmenu)
         thecmenu.place(relx=0.5, rely=0.82 ,anchor=CENTER)
-        # theplayer = Player(50+10*clvl, 10+10*mlvl)
-        theplayer = Player(200+lvls[3], 5+lvls[0], lvls[2])
+        theplayer = Player(200+lvls[3], 30+lvls[0], lvls[2])
         theplayer.displayhealthbar()
         theplayer.playerturn()
 
@@ -1057,7 +1104,6 @@ class Player():
         self.health = health
         self.attack = attack
         self.luck = luck
-        # self.defence = defence
     
     def displayhealthbar(self):
         global hpbar_image
@@ -1079,7 +1125,7 @@ class Player():
         global phealthbar
         phealthbar.delete("health_bar")
         health_ratio = pcurrent_health / self.health
-        bar_width = 290 * health_ratio
+        bar_width = 490 * health_ratio
         phealthbar.create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
 
     def takedamage(self):
@@ -1095,14 +1141,11 @@ class Player():
     def healhp(self):
         global pcurrent_health
         global enemy
-        pcurrent_health += self.health/10
+        pcurrent_health += self.health/5
         if pcurrent_health >= self.health:
             pcurrent_health = self.health
-            self.updatehp()
-            enemy.enemyturn()
-        else:
-            self.updatehp()
-            enemy.enemyturn()
+        self.updatehp()
+        window.after(500, enemy.enemyturn)
 
     def playerturn(self):
         global playermenu
@@ -1116,6 +1159,7 @@ class Player():
     def playerattack(self):
         global enemy
         global enemymenu
+        global totalenemies
         playermenu.place_forget()
         enemymenu = Frame(window)
         enemymenu.place(relx=0.5, rely=0.82, anchor=CENTER)
@@ -1124,14 +1168,12 @@ class Player():
             e1button.pack()
             e2button = Button(enemymenu, text = f'right {enemy.name}', command=hpbar2.takedamage)
             e2button.pack()
-        else:
-            e1button = Button(enemymenu, text=f'middle {enemy.name}',command=hpbar1.takedamage)
+        elif enemy.amount == 1 and totalenemies == 2:
+            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar2.takedamage)
             e1button.pack()
-            if enemy.amount ==3:
-                e2button = Button(enemymenu, text=f'left {enemy.name}', command=hpbar2.takedamage)
-                e2button.pack()
-                e3button = Button(enemymenu, text= f'right {enemy.name}', command=hpbar3.takedamage)
-                e3button.pack()
+        else:
+            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar1.takedamage)
+            e1button.pack()
         goback = Button(enemymenu, text='go back', command = self.playerreturn)
         goback.pack()
 
@@ -1154,12 +1196,10 @@ class Enemy():
         global enemy_currenthp
         global hpbar1
         global hpbar2
-        global hpbar3
         global allenemies
         healthbars = []
         enemy_image = Image.open(f"sprites/{self.name}.png")
-        renemy_image = enemy_image.resize((300, 300))
-        enemyimg = ImageTk.PhotoImage(renemy_image)
+        enemyimg = ImageTk.PhotoImage(enemy_image)
         enemy1 = Label(window, image=enemyimg)
         enemy1.place(relx=0.5, rely=0.5, anchor=CENTER)
         allenemies = [enemy1]
@@ -1176,42 +1216,36 @@ class Enemy():
             hpbar2.displayhealthbar()
             enemy_currenthp.append(self.health)
             enemy1.place(relx=0.3, rely=0.5, anchor=CENTER)
-        elif self.amount ==3:
-            enemy2 = Label(window, image=enemyimg)
-            enemy2.place(anchor=CENTER, relx = 0.8, rely = 0.5)
-            allenemies.append(enemy2)
-            hpbar2 = Healthbar(self.health, 1)
-            hpbar2.createhealthbar()
-            hpbar2.displayhealthbar()
-            enemy_currenthp.append(self.health)
-            enemy3 = Label(window, image = enemyimg)
-            enemy3.place(anchor=CENTER, relx = 0.2, rely=0.5)
-            allenemies.append(enemy3)
-            hpbar3=Healthbar(self.health, 2)
-            hpbar3.createhealthbar()
-            hpbar3.displayhealthbar()
-            enemy_currenthp.append(self.health)
 
     def enemyturn(self):
         global enemymenu
+        global playermenu
         global turnsleft
-        enemymenu.destroy()
+        try:
+            enemymenu.destroy()
+        except:
+            pass
+        try: 
+            playermenu.destroy()
+        except:
+            pass
         turnsleft = self.amount
-        self.enemyattacks
+        self.enemyattacks()
 
     def enemyattacks(self):
         global turnsleft
-        if turnsleft > 0:
-            self.enemyattack
-        else:
+        print(self.amount)
+        if turnsleft == 0:
             theplayer.playerturn()
+        else:
+            self.enemyattack()
 
     def enemyattack(self):
         global turnsleft
+        window.after(1000)
         turnsleft -= 1
-        print('attacks')
         theplayer.takedamage()
-        window.after(100, self.enemyattacks)
+        window.after(1000, self.enemyattacks)
 
 class Healthbar():
     def __init__(self, maxhp, index):
@@ -1247,25 +1281,45 @@ class Healthbar():
         bar_width = 290 * health_ratio
         healthbars[self.index].create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
 
+    def combatquestion(self):
+        global quizes
+        quizes[random.randint(0,3)]()
+
     def takedamage(self):
         global allenemies
         global enemy_currenthp
         global healthbars
         global enemy
         global theplayer
+        global quizes
+        #insert tandom quizes here do this after dinner im going mad
+        # quizes[random.randint(0,3)]()
         enemy_currenthp[self.index] -= theplayer.attack
         print(enemy_currenthp[self.index])
         if enemy_currenthp[self.index] <= 0:
             enemy_currenthp[self.index] = 0
             healthbars[self.index].place_forget()
             allenemies[self.index].place_forget()
+            newamount = enemy.amount - 1
+            # print(newamount)
+            if newamount > 0 :
+                enemy.amount = newamount
+                enemy.enemyturn()
+            else:
+                traininggrounds()
         else:
             self.updatehp()
-        enemy.enemyturn()
+            enemy.enemyturn()
 
-class Boss(Enemy):
-    def __init__(self):
-        pass
+# class Boss(Enemy):
+#     def __init__(self):
+#         pass
+
+def combatexp():
+    global lvls
+    global xpmultiplier
+    global totalenemies
+    global enemy
     
 def lobby():
     global currentbg
