@@ -15,6 +15,10 @@ incorrect = mixer.Sound("sounds/incorrect.mp3")
 select = mixer.Sound("sounds/select.mp3")
 death = mixer.Sound("sounds/death.mp3")
 boom = mixer.Sound("sounds/boom.mp3")
+receivehit = mixer.Sound("sounds/takedmg.mp3")
+battlestart = mixer.Sound("sounds/battlestart.mp3")
+healsfx = mixer.Sound("sounds/heal.mp3")
+dooropen = mixer.Sound("sounds/dooropen.mp3")
 
 #stores backgrounds
 backgrounds = ['startup','lobbybg', 'tutarea', 'tg', 'combat', 'tutstart']
@@ -283,6 +287,7 @@ class Maths():
     def leave(self):
         global qwindow
         global questiontally
+        global player
         global window
         global mlock
         global locks
@@ -314,7 +319,7 @@ class Maths():
                     mathquiz()
         else:
             if result ==TRUE:
-                questiontally =+ 1
+                questiontally += 1
                 print(questiontally)
                 for widget in window.winfo_children():
                     if isinstance(widget, (Button, ttk.Button)):
@@ -325,6 +330,8 @@ class Maths():
                     hpbar1.takedamage()
                 elif healthbar_id==1:
                     hpbar2.takedamage()
+                else:
+                    theplayer.healhp()
             else:
                 qwindow.after_cancel(after_id)
                 qwindow.destroy()
@@ -424,6 +431,7 @@ def animalsquiz():
         global alock
         global locks
         global lvls
+        global theplayer
         global hpbar1
         global hpbar2
         if combat == FALSE:
@@ -451,7 +459,7 @@ def animalsquiz():
                     animalsquiz()
         else:
             if result ==TRUE:
-                questiontally =+ 1
+                questiontally += 1
                 print(questiontally)
                 for widget in window.winfo_children():
                     if isinstance(widget, (Button, ttk.Button)):
@@ -462,6 +470,8 @@ def animalsquiz():
                     hpbar1.takedamage()
                 elif healthbar_id==1:
                     hpbar2.takedamage()
+                else:
+                    theplayer.healhp()
             else:
                 qwindow.after_cancel(after_id)
                 qwindow.destroy()
@@ -562,6 +572,7 @@ def shapesquiz():
         global slock
         global locks
         global lvls
+        global theplayer
         global hpbar1
         global hpbar2
         if combat == FALSE:
@@ -589,7 +600,7 @@ def shapesquiz():
                     shapesquiz()
         else:
             if result ==TRUE:
-                questiontally =+ 1
+                questiontally += 1
                 print(questiontally)
                 for widget in window.winfo_children():
                     if isinstance(widget, (Button, ttk.Button)):
@@ -600,6 +611,8 @@ def shapesquiz():
                     hpbar1.takedamage()
                 elif healthbar_id==1:
                     hpbar2.takedamage()
+                else:
+                    theplayer.healhp()
             else:
                 qwindow.after_cancel(after_id)
                 qwindow.destroy()
@@ -716,6 +729,7 @@ def coloursquiz():
         global clock
         global locks
         global lvls
+        global theplayer
         global hpbar1
         global hpbar2
         if combat == FALSE:
@@ -743,7 +757,7 @@ def coloursquiz():
                     coloursquiz()
         else:
             if result ==TRUE:
-                questiontally =+ 1
+                questiontally += 1
                 print(questiontally)
                 for widget in window.winfo_children():
                     if isinstance(widget, (Button, ttk.Button)):
@@ -754,6 +768,8 @@ def coloursquiz():
                     hpbar1.takedamage()
                 elif healthbar_id==1:
                     hpbar2.takedamage()
+                else:
+                    theplayer.healhp()
             else:
                 qwindow.after_cancel(after_id)
                 qwindow.destroy()
@@ -994,6 +1010,7 @@ def showstats():
     global window
     global statwin
     global neropfp
+    mixer.Sound.play(select)
     statwin = Toplevel(window)
     statwin.title("account")
     statwin.geometry("350x430")
@@ -1067,6 +1084,7 @@ def traininggrounds():
     for widget in window.winfo_children():
             widget.destroy()
     currentbg = Background(3)
+    mixer.Sound.play(select)
     currentbg.load()
     if sum(lvls) == 4:
         vdialogue()
@@ -1075,6 +1093,7 @@ def traininggrounds():
 
 def tgsetup():
     global lvls
+    global location
     global currentbg
     currentbg = Background(3)
     currentbg.load()
@@ -1082,7 +1101,7 @@ def tgsetup():
     tgcanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
     tgcanvas.create_image(0, 0, anchor =NW, image=bgimage)
     homebutton = Button(window, text='lobby', command=lobby, fg="#000000", font=("DotGothic16", 15, "bold")) #draw image for this later)
-    homebutton.place(anchor=CENTER, relx=0.5, rely=0.025)
+    homebutton.place(anchor=CENTER, relx=0.5, rely=0.05)
     tgcanvas.create_text(600, 100, anchor=N, text=f"attack lvl = {lvls[0]}     defence lvl = {lvls[1]}     luck lvl = {lvls[2]}      health lvl = {lvls[3]}", font=("DotGothic16", 25), justify='center', fill='white')
     loadicons()
     abutton = Button(window, image=image_references[0], command=quizes[0], bg='#16131c')
@@ -1099,9 +1118,51 @@ def tgsetup():
     tgcanvas.create_text(972, 400, anchor=N, width=150,text=f'supportive training colour questions', font=("DotGothic16", 15), justify='center', fill='white')
     
     location = Combatmenu('training grounds')
-    combatstart = Button(window, text="combat trial", command=location.innitcombat)
+    combatstart = Button(window, text="combat trial", command=enemydecide, font=("DotGothic16", 15, "bold"), fg="#000000")
     combatstart.place(relx=0.5, rely=0.7, anchor=CENTER)
     tgcanvas.create_text(600, 700, anchor=N, width=150,text=f'combat trial\nfight enemies for more xp', font=("DotGothic16", 15), justify='center', fill='white')
+
+def enemydecide():
+    global topwin
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="disabled")
+    mixer.Sound.play(select)
+    topwin = Toplevel(window)
+    topwin.title("enemy difficulty")
+    topwin_width = 300
+    topwin_height = 200
+    screen_width = topwin.winfo_screenwidth()
+    screen_height = topwin.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (topwin_width / 2))
+    y_coordinate = int((screen_height / 2) - (topwin_height / 2))
+    topwin.geometry(f"{topwin_width}x{topwin_height}+{x_coordinate}+{y_coordinate}")
+    topwin.option_add("*Background", "#000000")
+    topwin.config(bg="#000000")
+    topwin.resizable(False,False)
+    slimebutton = Button(topwin, text="easier enemies (slimes)", command=slimes, font=("DotGothic16", 15, "bold"), fg="#000000")
+    slimebutton.pack(pady=10)
+    spiderbutton = Button(topwin, text="harder enemies (spiders)", command=spiders, font=("DotGothic16", 15, "bold"), fg="#000000")
+    spiderbutton.pack(pady=10)
+    cancel = Button(topwin, text="cancel", command=cancelenemy, font=("DotGothic16", 15, "bold"), fg="#000000")
+    cancel.pack(pady=10)
+
+def cancelenemy():
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="active")
+    topwin.destroy()
+
+def slimes():
+    global enemytype
+    enemytype = 0
+    location.innitcombat()
+
+def spiders():
+    global enemytype
+    enemytype = 1
+    location = Combatmenu('training grounds')
+    location.innitcombat()
 
 class Combatmenu():
     def __init__(self, area):
@@ -1110,22 +1171,25 @@ class Combatmenu():
     def innitcombat(self):
         global theplayer
         global enemy
+        global enemytype
         global totalenemies
         global combat
         global questiontally
+        global xpmultiplier
         questiontally = 0 #number of questions answered in combat
         combat = TRUE
-        # enemytype = random.randint(0,2)
-        enemytype = 1
         # totalenemies = random.randint(1,2)
         totalenemies = 2
         if enemytype ==1:
             enemy = Spiders(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
-        else:
+            xpmultiplier = 2
+        elif enemytype == 0:
+            xpmultiplier = 1
             enemy = Enemy(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
         theplayer = Player(200+lvls[3], 30+lvls[0], lvls[2])
         for widget in window.winfo_children():
             widget.destroy()
+        mixer.Sound.play(battlestart)
         self.combatsetup()
         theplayer.playerturn()
 
@@ -1153,6 +1217,79 @@ class Combatmenu():
 
         theplayer.displayhealthbar()
 
+    def endcombat(self):
+        global combat
+        global phealthbar
+        global lvls
+        global combatmenu
+        global combatbox
+        global xpmultiplier
+        for widget in window.winfo_children():
+            widget.destroy()
+        
+        combat = FALSE
+        currentbg = Background(4)
+        currentbg.load()
+        for x in range(0,4):
+            lvls[x] += questiontally*xpmultiplier
+
+        thecanvas = Canvas(window, width=1200, height=900)
+        thecanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+        thecanvas.create_image(0, 0, image=bgimage, anchor=NW)
+
+        combatmenu = ImageTk.PhotoImage(Image.open("sprites/combatmenu.png"))
+        thecmenu = Label(window, image=combatmenu)
+        thecmenu.place(relx=0.5, rely=0.82 ,anchor=CENTER)
+        newlvls = Label(window, text=f"attack is now level {lvls[0]}\n defence is now level {lvls[1]}\n luck is now level {lvls[2]}\n health is now level {lvls[3]}", font=("DotGothic16", 15, "bold"))
+        newlvls.place(relx=0.35, rely=0.82, anchor=CENTER)
+        profile()
+        neropfp.place(x=63,y=645)
+
+        combatbox = ImageTk.PhotoImage(Image.open("sprites/combattext.png"))
+        thecanvas.create_image(600, 100, image=combatbox)
+        thecanvas.create_text(600, 100, text=f"you won!\nyou answered {questiontally} questions successfully", font=("DotGothic16", 15, "bold"), fill="white")
+
+        returnbutton = Button(window, text="return to training grounds", command=traininggrounds, font=("DotGothic16", 15, "bold"), fg="#000000")
+        returnbutton.place(relx=0.7, rely=0.78, anchor=CENTER)
+
+        fightagain = Button(window, text="fight again", command=enemydecide, font=("DotGothic16", 15, "bold"), fg="#000000")
+        fightagain.place(relx=0.7, rely=0.84, anchor=CENTER)
+
+    def gameover(self):
+        global combat
+        global topwin
+        window.destroy()
+        mixer.Sound.play(death)
+        combat= FALSE
+        topwin = Tk()
+        topwin.title("game over")
+        topwin_width = 300
+        topwin_height = 200
+        screen_width = topwin.winfo_screenwidth()
+        screen_height = topwin.winfo_screenheight()
+        x_coordinate = int((screen_width / 2) - (topwin_width / 2))
+        y_coordinate = int((screen_height / 2) - (topwin_height / 2))
+        topwin.geometry(f"{topwin_width}x{topwin_height}+{x_coordinate}+{y_coordinate}")
+        topwin.option_add("*Background", "#000000")
+        topwin.config(bg="#000000")
+        topwin.resizable(False,False)
+        gameover_text = Label(topwin, text="you lost...\ntry again?", font=("DotGothic16", 15, "bold"), fg="#000000", bg="#FFFFFF")
+        gameover_text.pack(pady=10)
+        retry_button = Button(topwin, text="retry", command=self.restart, font=("DotGothic16", 15, "bold"), fg="#000000")
+        retry_button.pack(pady=10)
+        quit_button = Button(topwin, text="return to training grounds", command=self.exitcombat, font=("DotGothic16", 15, "bold"), fg="#000000")
+        quit_button.pack(pady=10)
+    
+    def exitcombat(self):
+        topwin.destroy()
+        windowsetup()
+        traininggrounds()
+
+    def restart(self):
+        topwin.destroy()
+        windowsetup()
+        self.innitcombat()
+
 class Player():
     def __init__(self, health, attack, luck):
         self.health = health
@@ -1163,6 +1300,7 @@ class Player():
         global hpbar_image
         global pcurrent_health
         global phealthbar
+        global hpamount
         pcurrent_health = self.health
         image_path = "sprites/phealthbar.png"
         pil_image = Image.open(image_path)
@@ -1181,16 +1319,27 @@ class Player():
         health_ratio = pcurrent_health / self.health
         bar_width = 490 * health_ratio
         phealthbar.create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
+        hpamount.config(text=f'{pcurrent_health}/{self.health}')
 
     def takedamage(self):
         global pcurrent_health
         global enemy
+        global location
         pcurrent_health -= enemy.attack
-        if pcurrent_health <= 0:
-            for widget in window.winfo_children():
-                widget.destroy()
-        else:
-            self.updatehp()
+        try:
+            if window.winfo_exists():
+                mixer.Sound.play(receivehit)
+                if pcurrent_health <= 0:
+                    location.gameover()
+                else:
+                    self.updatehp()
+        except TclError:
+            pass
+
+    def createquiz(self):
+        global healthbar_id
+        quizes[random.randint(0,3)]()
+        healthbar_id = 'none'
     
     def healhp(self):
         global pcurrent_health
@@ -1198,40 +1347,44 @@ class Player():
         pcurrent_health += self.health/5
         if pcurrent_health >= self.health:
             pcurrent_health = self.health
+        mixer.Sound.play(healsfx)
         self.updatehp()
         window.after(500, enemy.enemyturn)
 
     def playerturn(self):
         global playermenu
-        try: thecanvas.delete('narration')
-        except: pass
-        playermenu = Frame(window)
-        playermenu.place(relx=0.5, rely=0.82, anchor=CENTER)
-        atk = Button(playermenu, text='attack', command=self.playerattack)
-        atk.pack()
-        heal = Button(playermenu, text="heal", command=self.healhp)
-        heal.pack()
-        thecanvas.create_text(600, 100, text="player turn", font=("DotGothic16", 20, "bold"), fill="white", tags='narration')
+        global combat
+        if combat == TRUE:
+            try: thecanvas.delete('narration')
+            except: pass
+            playermenu = Frame(window)
+            playermenu.place(relx=0.75, rely=0.8, anchor=CENTER)
+            atk = Button(playermenu, text='attack', command=self.playerattack, font=("DotGothic16", 15, "bold"), fg="#000000")
+            atk.pack()
+            heal = Button(playermenu, text="heal", command=self.createquiz, font=("DotGothic16", 15, "bold"), fg="#000000")
+            heal.pack()
+            thecanvas.create_text(600, 100, text="player turn", font=("DotGothic16", 20, "bold"), fill="white", tags='narration')
     
     def playerattack(self):
         global enemy
         global enemymenu
         global totalenemies
+        mixer.Sound.play(select)
         playermenu.place_forget()
         enemymenu = Frame(window)
-        enemymenu.place(relx=0.5, rely=0.82, anchor=CENTER)
+        enemymenu.place(relx=0.75, rely=0.8, anchor=CENTER)
         if enemy.amount == 2:
-            e1button = Button(enemymenu, text = f'left {enemy.name}',command=hpbar1.createquiz)
+            e1button = Button(enemymenu, text = f'left {enemy.name}',command=hpbar1.createquiz, font=("DotGothic16", 15, "bold"), fg="#000000")
             e1button.pack()
-            e2button = Button(enemymenu, text = f'right {enemy.name}', command=hpbar2.createquiz)
+            e2button = Button(enemymenu, text = f'right {enemy.name}', command=hpbar2.createquiz, font=("DotGothic16", 15, "bold"), fg="#000000")
             e2button.pack()
         elif enemy.amount == 1 and totalenemies == 2:
-            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar2.createquiz)
+            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar2.createquiz, font=("DotGothic16", 15, "bold"), fg="#000000")
             e1button.pack()
         else:
-            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar1.createquiz)
+            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar1.createquiz, font=("DotGothic16", 15, "bold"), fg="#000000")
             e1button.pack()
-        goback = Button(enemymenu, text='go back', command = self.playerreturn)
+        goback = Button(enemymenu, text='go back', command = self.playerreturn, font=("DotGothic16", 15, "bold"), fg="#000000")
         goback.pack()
 
     def playerreturn(self):
@@ -1298,7 +1451,6 @@ class Enemy():
 
     def enemyattacks(self):
         global turnsleft
-        print(self.amount)
         if turnsleft == 0:
             theplayer.playerturn()
         else:
@@ -1378,9 +1530,6 @@ class Healthbar():
         bar_width = 290 * health_ratio
         healthbars[self.index].create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
 
-    def combatquestion(self):
-        global quizes
-        quizes[random.randint(0,3)]()
 
     def createquiz(self):
         global healthbar_id
@@ -1398,6 +1547,7 @@ class Healthbar():
         global quizes
         global hurtenemy
         global coords
+        global location
 
         coords = thecanvas.coords(allenemies[self.index])
         hurtenemy = ImageTk.PhotoImage(Image.open(f"sprites/hurt{enemy.name}.png"))
@@ -1415,7 +1565,8 @@ class Healthbar():
                 enemy.amount = newamount
                 enemy.enemyturn()
             else:
-                traininggrounds()
+                # traininggrounds()
+                location.endcombat()
         else:
             mixer.Sound.play(boom)
             window.after(300, self.returnsprite)
