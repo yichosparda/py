@@ -70,7 +70,6 @@ image_references = [] #storing images to prevent garbage collection
 
 tg = TRUE #whether or not training grounds is unlocked
 combat = FALSE #whether or not in combat
-questiontally = 0 #number of questions answered in combat
 
 class Background():
     def __init__(self, index):
@@ -158,34 +157,36 @@ def nexttext():
         vdialogue()
 
 def mathquiz():
-    global window
+    global qwindow
     global result
     global mcount
     global manswer
-    window.destroy()
-    window = Tk()
-    window.title("maths question")
-    window_width = 450
-    window_height = 150
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="disabled")
+    qwindow = Toplevel(window)
+    qwindow.title("maths question")
+    qwindow_width = 450
+    qwindow_height = 150
     screen_width = window.winfo_screenwidth()
     screen_height = window.winfo_screenheight()
-    x_coordinate = int((screen_width / 2) - (window_width / 2))
-    y_coordinate = int((screen_height / 2) - (window_height / 2))
-    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
-    window.option_add("*Background", "#000000")
-    window.config(bg="#000000")
-    window.resizable(False,False)
+    x_coordinate = int((screen_width / 2) - (qwindow_width / 2))
+    y_coordinate = int((screen_height / 2) - (qwindow_height / 2))
+    qwindow.geometry(f"{qwindow_width}x{qwindow_height}+{x_coordinate}+{y_coordinate}")
+    qwindow.option_add("*Background", "#000000")
+    qwindow.config(bg="#000000")
+    qwindow.resizable(False,False)
     mcount = 15
     result = 0 
 
     def askquestion():
-        text1 = Label(window, text=question.question(), font=("DotGothic16", 20, "bold"))
+        text1 = Label(qwindow, text=question.question(), font=("DotGothic16", 20, "bold"))
         text1.grid(row=1, column=0, padx = 15, sticky="w")
 
     def checkanswer():
         global mcount
         global result
-        text2 = Label(window, text=question.answer(), font=("DotGothic16", 15, "bold"), justify=LEFT)
+        text2 = Label(qwindow, text=question.answer(), font=("DotGothic16", 15, "bold"), justify=LEFT)
         text2.grid(row=2, column=0, sticky="w", padx=20)
         if result == TRUE:
             mixer.Sound.play(correct)
@@ -201,7 +202,7 @@ def mathquiz():
             if mcount >= 0:
                 timer.config(text=f"you have {mcount} seconds left!")
                 mcount -= 1
-                after_id = window.after(1000, countdown)
+                after_id = qwindow.after(1000, countdown)
             else:
                 checkanswer()
         except:
@@ -221,7 +222,6 @@ def mathquiz():
             manswer.delete(0, 'end')
 
     subject = random.randint(0,3)
-    # subject = 0
 
     if subject == 2:
         question = subjects[subject](random.randint(1,5), random.randint(1,5))
@@ -246,15 +246,15 @@ def mathquiz():
         else:
             continue
 
-    timer = Label(window, text=f"you have {mcount} seconds left!", font=("DotGothic16", 15, "bold"))
+    timer = Label(qwindow, text=f"you have {mcount} seconds left!", font=("DotGothic16", 15, "bold"))
     timer.grid(row=0, column=0, sticky="w", padx=5)
     askquestion()
     countdown()
-    manswer = Entry(window, bd=3, relief="ridge", width=10)
+    manswer = Entry(qwindow, bd=3, relief="ridge", width=10)
     manswer.grid(row=1, column=1, sticky="w")
     manswer.bind("<Return>", enterbutton)
     manswer.bind("<Key>", checkint)
-    check = Button(window, text="check", command=checkanswer)
+    check = Button(qwindow, text="check", command=checkanswer)
     check.grid(row=3, column=0, sticky="w", padx=20)
 
 class Maths():
@@ -281,46 +281,54 @@ class Maths():
             return f"sorry...\nthe answer was {self.number1 + self.number2}"
     
     def leave(self):
+        global qwindow
+        global questiontally
         global window
         global mlock
         global locks
         global lvls
-        global xpmultiplier
-        global after_id
-        if lvls[0] == 0:
-            if result == TRUE:
-                window.after_cancel(after_id)
-                mlock -= 1
-                locks = [mlock, alock, slock, clock]
-                marea()
+        global hpbar1
+        global hpbar2
+        if combat == FALSE:
+            if lvls[0] == 0:
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    mlock -= 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy()
+                    marea()
+                else: 
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    mathquiz()
             else: 
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("maths question")
-                window.geometry("400x150")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                mathquiz()
-        else: 
-            if result == TRUE:
-                window.after_cancel(after_id)
-                lvls[0] += 1 * xpmultiplier
-                locks = [mlock, alock, slock, clock]
-                window.destroy()
-                windowsetup()
-                traininggrounds()
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    lvls[0] += 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy()
+                    traininggrounds()
+                else:
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    mathquiz()
+        else:
+            if result ==TRUE:
+                questiontally =+ 1
+                print(questiontally)
+                for widget in window.winfo_children():
+                    if isinstance(widget, (Button, ttk.Button)):
+                        widget.config(state="active")
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                if healthbar_id==0:
+                    hpbar1.takedamage()
+                elif healthbar_id==1:
+                    hpbar2.takedamage()
             else:
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("maths question")
-                window.geometry("400x150")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                mathquiz()
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                enemy.enemyturn()
 
 #category for subtraction questions
 class Subtraction(Maths):
@@ -384,22 +392,24 @@ class Division(Maths):
 subjects = [Maths, Subtraction, Multiplication, Division] #lists of subjects to refer to 
 
 def animalsquiz():
-    global window
+    global qwindow
     global result
     global acount
-    window.destroy()
-    window = Tk()
-    window.title("animal question")
-    window_width = 300
-    window_height = 270
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    x_coordinate = int((screen_width / 2) - (window_width / 2))
-    y_coordinate = int((screen_height / 2) - (window_height / 2))
-    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
-    window.option_add("*Background", "#000000")
-    window.config(bg="#000000")
-    window.resizable(False,False)
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="disabled")
+    qwindow = Toplevel(window)
+    qwindow.title("animal question")
+    qwindow_width = 300
+    qwindow_height = 270
+    screen_width = qwindow.winfo_screenwidth()
+    screen_height = qwindow.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (qwindow_width / 2))
+    y_coordinate = int((screen_height / 2) - (qwindow_height / 2))
+    qwindow.geometry(f"{qwindow_width}x{qwindow_height}+{x_coordinate}+{y_coordinate}")
+    qwindow.option_add("*Background", "#000000")
+    qwindow.config(bg="#000000")
+    qwindow.resizable(False,False)
 
     animals = ['Bear','Bird','Cat','Dog','Fox','Horse', 'Penguin', 'Raccoon']
     animal = random.randint(0,7)
@@ -408,45 +418,54 @@ def animalsquiz():
     result = 0 
 
     def leave():
+        global qwindow
+        global questiontally
         global window
         global alock
         global locks
         global lvls
-        global xpmultiplier
-        if lvls[1] == 0:
-            if result == TRUE:
-                window.after_cancel(after_id)
-                alock -= 1
-                locks = [mlock, alock, slock, clock]
-                aarea()
+        global hpbar1
+        global hpbar2
+        if combat == FALSE:
+            if lvls[1] == 0:
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    alock -= 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy()
+                    aarea()
+                else: 
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    animalsquiz()
             else: 
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("animal question")
-                window.geometry("300x270")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                animalsquiz()
-        else: 
-            if result == TRUE:
-                window.after_cancel(after_id)
-                lvls[1] += 1 * xpmultiplier
-                locks = [mlock, alock, slock, clock]
-                window.destroy()
-                windowsetup()
-                traininggrounds()
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    lvls[1] += 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy()
+                    traininggrounds()
+                else:
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    animalsquiz()
+        else:
+            if result ==TRUE:
+                questiontally =+ 1
+                print(questiontally)
+                for widget in window.winfo_children():
+                    if isinstance(widget, (Button, ttk.Button)):
+                        widget.config(state="active")
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                if healthbar_id==0:
+                    hpbar1.takedamage()
+                elif healthbar_id==1:
+                    hpbar2.takedamage()
             else:
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("animal question")
-                window.geometry("300x270")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                animalsquiz()
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                enemy.enemyturn()
 
     def countdown():
         global acount
@@ -456,7 +475,7 @@ def animalsquiz():
             if acount >= 0:
                 timer.config(text=f"you have {acount} seconds left!")
                 acount -= 1
-                after_id = window.after(1000, countdown)
+                after_id = qwindow.after(1000, countdown)
             else:
                 animalanswer()
         except:
@@ -474,7 +493,7 @@ def animalsquiz():
         text2 = 0
         answer = (qanswer.get()).upper()
         if answer == animals[animal].upper():
-            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2=Label(qwindow, text="correct!", font=("DotGothic16", 15, "bold"))
             text2.grid(row=4, column=0, sticky="w", padx=20)
             check.config(text = "continue", command = leave)
             check.grid(row = 5, column=0)
@@ -483,7 +502,7 @@ def animalsquiz():
             result = TRUE
 
         else:
-            text2=Label(window, text=f"sorry... it's {animals[animal].lower()}", font=("DotGothic16", 15, "bold"))
+            text2=Label(qwindow, text=f"sorry... it's {animals[animal].lower()}", font=("DotGothic16", 15, "bold"))
             text2.grid(row=4, column=0, sticky="w", padx=20)
             check.config(text = "continue", command = leave)
             check.grid(row = 5, column=0)
@@ -491,88 +510,100 @@ def animalsquiz():
             acount = "done"
             result = FALSE
 
-    timer = Label(window, text=f"you have {acount} seconds left!", font=("DotGothic16", 15, "bold"))
+    timer = Label(qwindow, text=f"you have {acount} seconds left!", font=("DotGothic16", 15, "bold"))
     timer.grid(row=0, column=0, sticky="w", padx=5)
 
     def askanimal():
-        global photo
-        question = Label(window, text="what animal is this?", font=("DotGothic16", 20, "bold"))
+        global aphoto
+        question = Label(qwindow, text="what animal is this?", font=("DotGothic16", 20, "bold"))
         question.grid(row=1, column=0, sticky="w", padx=15)
         image = Image.open(f"animals/{animals[animal]}.png")
         resized_image = image.resize((100, 100))
-        photo = ImageTk.PhotoImage(resized_image)
-        theshape = Label(window, image=photo)
+        aphoto = ImageTk.PhotoImage(resized_image)
+        theshape = Label(qwindow, image=aphoto)
+        theshape.image = aphoto
         theshape.grid(row=2, column=0)
 
     askanimal()
     countdown()
-    qanswer = Entry(window, bd=3, relief="ridge", width=10)
+    qanswer = Entry(qwindow, bd=3, relief="ridge", width=10)
     qanswer.grid(row=3, column=0, sticky="w", padx=20)
     qanswer.bind("<Return>", enterbutton)
-    check = Button(window, text="check", command=animalanswer)
+    check = Button(qwindow, text="check", command=animalanswer)
     check.grid(row=4, column=0, sticky="w", padx=20)
 
 def shapesquiz():
     global scount
-    global window
+    global qwindow
     global result
-    window.destroy()
-    window = Tk()
-    window.title("shape question")
-    window_width = 300
-    window_height = 270
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    x_coordinate = int((screen_width / 2) - (window_width / 2))
-    y_coordinate = int((screen_height / 2) - (window_height / 2))
-    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
-    window.option_add("*Background", "#000000")
-    window.config(bg="#000000")
-    window.resizable(False,False)
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="disabled")
+    qwindow = Toplevel(window)
+    qwindow.title("shape question")
+    qwindow_width = 300
+    qwindow_height = 270
+    screen_width = qwindow.winfo_screenwidth()
+    screen_height = qwindow.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (qwindow_width / 2))
+    y_coordinate = int((screen_height / 2) - (qwindow_height / 2))
+    qwindow.geometry(f"{qwindow_width}x{qwindow_height}+{x_coordinate}+{y_coordinate}")
+    qwindow.option_add("*Background", "#000000")
+    qwindow.config(bg="#000000")
+    qwindow.resizable(False,False)
     result = 0
     shapes = ['Rectangle','Square','Circle','Pentagon','Hexagon','Octagon']
     scount = 15
 
     def leave():
+        global qwindow
+        global questiontally
         global window
         global slock
         global locks
         global lvls
-        global xpmultiplier
-        if lvls[2] == 0:
-            if result == TRUE:
-                window.after_cancel(after_id)
-                slock -= 1
-                locks = [mlock, alock, slock, clock]
-                sarea()
+        global hpbar1
+        global hpbar2
+        if combat == FALSE:
+            if lvls[2] == 0:
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    slock -= 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy()
+                    sarea()
+                else: 
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    shapesquiz()
             else: 
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("shape question")
-                window.geometry("300x270")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                shapesquiz()
-        else: 
-            if result == TRUE:
-                window.after_cancel(after_id)
-                lvls[2] += 1 * xpmultiplier
-                locks = [mlock, alock, slock, clock]
-                window.destroy()
-                windowsetup()
-                traininggrounds()
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    lvls[2] += 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy
+                    traininggrounds()
+                else:
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    shapesquiz()
+        else:
+            if result ==TRUE:
+                questiontally =+ 1
+                print(questiontally)
+                for widget in window.winfo_children():
+                    if isinstance(widget, (Button, ttk.Button)):
+                        widget.config(state="active")
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                if healthbar_id==0:
+                    hpbar1.takedamage()
+                elif healthbar_id==1:
+                    hpbar2.takedamage()
             else:
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("shape question")
-                window.geometry("300x270")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                shapesquiz()
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                enemy.enemyturn()
 
     def countdown():
         global scount
@@ -582,7 +613,7 @@ def shapesquiz():
             if scount >= 0:
                 timer.config(text=f"you have {scount} seconds left!")
                 scount -= 1
-                after_id = window.after(1000, countdown)
+                after_id = qwindow.after(1000, countdown)
             else:
                 shapeanswer()
         except:
@@ -603,7 +634,7 @@ def shapesquiz():
         text2 = 0
         answer = (sanswer.get()).upper()
         if answer == "RECTANGLE" and shapes[shape].upper() == "SQUARE":
-            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2=Label(qwindow, text="correct!", font=("DotGothic16", 15, "bold"))
             text2.grid(row=4, column=0, sticky="w", padx=20)
             check.config(text = "continue", command = leave)
             check.grid(row = 5, column=0)
@@ -612,7 +643,7 @@ def shapesquiz():
             result = TRUE
             
         elif answer == shapes[shape].upper():
-            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2=Label(qwindow, text="correct!", font=("DotGothic16", 15, "bold"))
             text2.grid(row=4, column=0, sticky="w", padx=20)
             check.config(text = "continue", command = leave)
             check.grid(row = 5, column=0)
@@ -621,7 +652,7 @@ def shapesquiz():
             result = TRUE
 
         else:
-            text2=Label(window, text=f"sorry... it's {shapes[shape].lower()}", font=("DotGothic16", 15, "bold"))
+            text2=Label(qwindow, text=f"sorry... it's {shapes[shape].lower()}", font=("DotGothic16", 15, "bold"))
             text2.grid(row=4, column=0, sticky="w", padx=20)
             check.config(text = "continue", command = leave)
             check.grid(row = 5, column=0)
@@ -631,91 +662,102 @@ def shapesquiz():
 
     def askshape():
         global photo
-        question = Label(window, text="what shape is this?", font=("DotGothic16", 20, "bold"))
+        question = Label(qwindow, text="what shape is this?", font=("DotGothic16", 20, "bold"))
         question.grid(row=1, column=0, sticky="w", padx=15)
         image = Image.open(f"shapes/{shapes[shape]}.png")
         if shape == 0:
             resized_image = image.resize((200, 100))
             photo = ImageTk.PhotoImage(resized_image)
-            theshape = Label(window, image=photo)
+            theshape = Label(qwindow, image=photo)
             theshape.grid(row=2, column=0)
         else: 
             resized_image = image.resize((100, 100))
             photo = ImageTk.PhotoImage(resized_image)
-            theshape = Label(window, image=photo)
+            theshape = Label(qwindow, image=photo)
             theshape.grid(row=2, column=0)
 
-    timer = Label(window, text=f"you have {scount} seconds left!", font=("DotGothic16", 15, "bold"))
+    timer = Label(qwindow, text=f"you have {scount} seconds left!", font=("DotGothic16", 15, "bold"))
     timer.grid(row=0, column=0, sticky="w", padx=5)
     askshape()
     countdown()
-    sanswer = Entry(window, bd=3, relief="ridge", width=10)
+    sanswer = Entry(qwindow, bd=3, relief="ridge", width=10)
     sanswer.grid(row=3, column=0, sticky="w", padx=20)
     sanswer.bind("<Return>", enterbutton)
-    check = Button(window, text="check", command=shapeanswer)
+    check = Button(qwindow, text="check", command=shapeanswer)
     check.grid(row=4, column=0, sticky="w", padx=20)
 
 def coloursquiz():
-    global ccount
-    global window
+    global qwindow
     global result
-    window.destroy()
-    window = Tk()
-    window.title("colour question")
-    window_width = 300
-    window_height = 160
-    screen_width = window.winfo_screenwidth()
-    screen_height = window.winfo_screenheight()
-    x_coordinate = int((screen_width / 2) - (window_width / 2))
-    y_coordinate = int((screen_height / 2) - (window_height / 2))
-    window.geometry(f"{window_width}x{window_height}+{x_coordinate}+{y_coordinate}")
-    window.option_add("*Background", "#000000")
-    window.config(bg="#000000")
-    window.resizable(False,False)
+    global ccount
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="disabled")
+    qwindow = Toplevel(window)
+    qwindow.title("colour question")
+    qwindow_width = 300
+    qwindow_height = 160
+    screen_width = qwindow.winfo_screenwidth()
+    screen_height = qwindow.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (qwindow_width / 2))
+    y_coordinate = int((screen_height / 2) - (qwindow_height / 2))
+    qwindow.geometry(f"{qwindow_width}x{qwindow_height}+{x_coordinate}+{y_coordinate}")
+    qwindow.option_add("*Background", "#000000")
+    qwindow.config(bg="#000000")
+    qwindow.resizable(False,False)
     result = 0
     colours = ['Red','Blue','Green','Pink','Black','Yellow','Orange','White','Purple','Brown']
     ccount = 15
 
     def leave():
+        global qwindow
+        global questiontally
         global window
         global clock
         global locks
         global lvls
-        global xpmultiplier
-        if lvls[3] == 0:
-            if result == TRUE:
-                window.after_cancel(after_id)
-                clock -= 1
-                locks = [mlock, alock, slock, clock]
-                carea()
+        global hpbar1
+        global hpbar2
+        if combat == FALSE:
+            if lvls[3] == 0:
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    clock -= 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy()
+                    carea()
+                else: 
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    coloursquiz()
             else: 
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("colour question")
-                window.geometry("300x160")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                coloursquiz()
-        else: 
-            if result == TRUE:
-                window.after_cancel(after_id)
-                lvls[3] += 1 * xpmultiplier
-                locks = [mlock, alock, slock, clock]
-                window.destroy()
-                windowsetup()
-                traininggrounds()
+                if result == TRUE:
+                    qwindow.after_cancel(after_id)
+                    lvls[3] += 1
+                    locks = [mlock, alock, slock, clock]
+                    qwindow.destroy()
+                    traininggrounds()
+                else:
+                    qwindow.after_cancel(after_id)
+                    qwindow.destroy()
+                    coloursquiz()
+        else:
+            if result ==TRUE:
+                questiontally =+ 1
+                print(questiontally)
+                for widget in window.winfo_children():
+                    if isinstance(widget, (Button, ttk.Button)):
+                        widget.config(state="active")
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                if healthbar_id==0:
+                    hpbar1.takedamage()
+                elif healthbar_id==1:
+                    hpbar2.takedamage()
             else:
-                window.after_cancel(after_id)
-                window.destroy()
-                window = Tk()
-                window.title("colour question")
-                window.geometry("300x160")
-                window.option_add("*Background", "#000000")
-                window.config(bg="#000000")
-                window.resizable(False,False)
-                coloursquiz()
+                qwindow.after_cancel(after_id)
+                qwindow.destroy()
+                enemy.enemyturn()
 
     def countdown():
         global ccount
@@ -725,7 +767,7 @@ def coloursquiz():
             if ccount >= 0:
                 timer.config(text=f"you have {ccount} seconds left!")
                 ccount -= 1
-                after_id = window.after(1000, countdown)
+                after_id = qwindow.after(1000, countdown)
             else:
                 colouranswer()
         except:
@@ -741,9 +783,9 @@ def coloursquiz():
             colouranswer()
 
     def askcolour():
-        question = Label(window, text="what colour is this?", font=("DotGothic16", 20, "bold"))
+        question = Label(qwindow, text="what colour is this?", font=("DotGothic16", 20, "bold"))
         question.grid(row=1, column=0, sticky="w", padx=15)
-        thecolour = Label(window, text="---", fg=colours[colour], bg=colours[colour], font=("DotGothic16", 12, "bold"), relief="raised")
+        thecolour = Label(qwindow, text="---", fg=colours[colour], bg=colours[colour], font=("DotGothic16", 12, "bold"), relief="raised")
         thecolour.grid(row=1, column=1)
 
     def colouranswer():
@@ -753,7 +795,7 @@ def coloursquiz():
         text2 = 0
         answer = (canswer.get()).upper()
         if answer == colours[colour].upper():
-            text2=Label(window, text="correct!", font=("DotGothic16", 15, "bold"))
+            text2=Label(qwindow, text="correct!", font=("DotGothic16", 15, "bold"))
             text2.grid(row=3, column=0, sticky="w", padx=20)
             check.config(text = "continue", command = leave)
             check.grid(row = 4, column=0)
@@ -761,7 +803,7 @@ def coloursquiz():
             result = TRUE
             ccount = "done"
         else:
-            text2=Label(window, text=f"sorry... it's {colours[colour].lower()}", font=("DotGothic16", 15, "bold"))
+            text2=Label(qwindow, text=f"sorry... it's {colours[colour].lower()}", font=("DotGothic16", 15, "bold"))
             text2.grid(row=3, column=0, sticky="w", padx=20)
             check.config(text = "continue", command = leave)
             check.grid(row = 4, column=0)
@@ -769,14 +811,14 @@ def coloursquiz():
             result = FALSE
             ccount = "done"
 
-    timer = Label(window, text=f"you have {ccount} seconds left!", font=("DotGothic16", 15, "bold"))
+    timer = Label(qwindow, text=f"you have {ccount} seconds left!", font=("DotGothic16", 15, "bold"))
     timer.grid(row=0, column=0, sticky="w", padx=5)
     askcolour()
     countdown()
-    canswer = Entry(window, bd=3, relief="ridge", width=10)
+    canswer = Entry(qwindow, bd=3, relief="ridge", width=10)
     canswer.grid(row=2, column=0, sticky="w", padx=20)
     canswer.bind("<Return>", enterbutton)
-    check = Button(window, text="check", command=colouranswer)
+    check = Button(qwindow, text="check", command=colouranswer)
     check.grid(row=3, column=0, sticky="w", padx=20)
 
 quizes = [mathquiz, animalsquiz, shapesquiz, coloursquiz]
@@ -795,7 +837,7 @@ def areasetup():
     global subjectindex
     global lock
     global lectern
-    global curren
+    global currentbg
     global theorb
     global orb
     global lvls
@@ -806,6 +848,7 @@ def areasetup():
         lock_image = Image.open("sprites/lock.png")
         lock = ImageTk.PhotoImage(lock_image)
         lock1 = Button(window, width =602, height = 686, image = lock, command = tutq)
+        lock1.image = lock
         lock1.place(relx=0.5, rely = 0.385 ,anchor=CENTER)
         indicator = Label(window, text=locks[subjectindex], font=("DotGothic16", 15, "bold"), bg='#423354') 
         indicator.place(anchor=CENTER, relx=0.5, rely= 0.2)
@@ -826,14 +869,14 @@ def profile():
     nero_image = Image.open("sprites/nero.png")
     nero = ImageTk.PhotoImage(nero_image)
     neropfp = Button(window, width =179, height=179, image=nero, command = showstats)
+    neropfp.image = nero
     neropfp.place(x= 30, y = 30)
 
 def marea():
-    global window
     global subjectindex
     subjectindex = 0
-    window.destroy()
-    windowsetup()
+    for widget in window.winfo_children():
+        widget.destroy()
     global currentbg
     currentbg = Background(5)
     currentbg.load()
@@ -845,11 +888,10 @@ def marea():
         areasetup()
 
 def aarea():
-    global window
     global subjectindex
     subjectindex = 1
-    window.destroy()
-    windowsetup()
+    for widget in window.winfo_children():
+        widget.destroy()
     global currentbg
     currentbg = Background(5)
     currentbg.load()
@@ -863,8 +905,8 @@ def sarea():
     global window
     global subjectindex
     subjectindex = 2
-    window.destroy()
-    windowsetup()
+    for widget in window.winfo_children():
+        widget.destroy()
     global currentbg
     currentbg = Background(5)
     currentbg.load()
@@ -878,8 +920,8 @@ def carea():
     global window
     global subjectindex
     subjectindex = 3
-    window.destroy()
-    windowsetup()
+    for widget in window.winfo_children():
+        widget.destroy()
     global currentbg
     currentbg = Background(5)
     currentbg.load()
@@ -1029,8 +1071,6 @@ def traininggrounds():
     if sum(lvls) == 4:
         vdialogue()
     else:
-        home = Button(window, text='home', command=lobby)
-        home.pack(pady= 30)
         tgsetup()
 
 def tgsetup():
@@ -1038,23 +1078,30 @@ def tgsetup():
     global currentbg
     currentbg = Background(3)
     currentbg.load()
-    statlist = Label(window, text=f"attack lvl = {lvls[0]}     defence lvl = {lvls[1]}     luck lvl = {lvls[2]}      health lvl = {lvls[3]}")
-    statlist.pack(pady=20)
+    tgcanvas = Canvas(window, width=1200, height=900)
+    tgcanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+    tgcanvas.create_image(0, 0, anchor =NW, image=bgimage)
+    homebutton = Button(window, text='lobby', command=lobby, fg="#000000", font=("DotGothic16", 15, "bold")) #draw image for this later)
+    homebutton.place(anchor=CENTER, relx=0.5, rely=0.025)
+    tgcanvas.create_text(600, 100, anchor=N, text=f"attack lvl = {lvls[0]}     defence lvl = {lvls[1]}     luck lvl = {lvls[2]}      health lvl = {lvls[3]}", font=("DotGothic16", 25), justify='center', fill='white')
     loadicons()
-    for x in range(0,4):
-        frame = Frame(window)
-        frame.pack(anchor=N, pady=10)
-        icons = Button(frame, image=image_references[x], command=quizes[x])
-        icons.pack(side=TOP,padx= 20)
-        desc = Label(frame, text = f'{stats[x]} training\n {qsubjects[x]} questions', font=("DotGothic16", 15, "bold"))
-        desc.pack()
-    combatfrm = Frame(window)
-    combatfrm.pack(anchor=CENTER)
+    abutton = Button(window, image=image_references[0], command=quizes[0], bg='#16131c')
+    abutton.place(x= 180, y = 300)
+    tgcanvas.create_text(222, 400, anchor=N, width=150,text=f'offensive training math questions', font=("DotGothic16", 15), justify='center', fill='white')
+    bbutton = Button(window, image=image_references[1], command=quizes[1], bg='#16131c')
+    bbutton.place(x= 430, y = 300)
+    tgcanvas.create_text(472, 400, anchor=N, width=150,text=f'defencive training animal questions', font=("DotGothic16", 15), justify='center', fill='white')
+    cbutton = Button(window, image=image_references[2], command=quizes[2], bg='#16131c')
+    cbutton.place(x= 680, y = 300)
+    tgcanvas.create_text(722, 400, anchor=N, width=150,text=f'tactical training shape questions', font=("DotGothic16", 15), justify='center', fill='white')
+    dbutton = Button(window, image=image_references[3], command=quizes[3], bg='#16131c')
+    dbutton.place(x= 930, y = 300)
+    tgcanvas.create_text(972, 400, anchor=N, width=150,text=f'supportive training colour questions', font=("DotGothic16", 15), justify='center', fill='white')
+    
     location = Combatmenu('training grounds')
-    combatstart = Button(combatfrm, text="combat trial", command=location.innitcombat)
-    combatstart.pack()
-    combatdesc = Label(combatfrm, text= "use combination of all spells to face off minor enemies\n offers double xp")
-    combatdesc.pack()
+    combatstart = Button(window, text="combat trial", command=location.innitcombat)
+    combatstart.place(relx=0.5, rely=0.7, anchor=CENTER)
+    tgcanvas.create_text(600, 700, anchor=N, width=150,text=f'combat trial\nfight enemies for more xp', font=("DotGothic16", 15), justify='center', fill='white')
 
 class Combatmenu():
     def __init__(self, area):
@@ -1064,6 +1111,10 @@ class Combatmenu():
         global theplayer
         global enemy
         global totalenemies
+        global combat
+        global questiontally
+        questiontally = 0 #number of questions answered in combat
+        combat = TRUE
         # enemytype = random.randint(0,2)
         enemytype = 1
         # totalenemies = random.randint(1,2)
@@ -1170,15 +1221,15 @@ class Player():
         enemymenu = Frame(window)
         enemymenu.place(relx=0.5, rely=0.82, anchor=CENTER)
         if enemy.amount == 2:
-            e1button = Button(enemymenu, text = f'left {enemy.name}',command=hpbar1.takedamage)
+            e1button = Button(enemymenu, text = f'left {enemy.name}',command=hpbar1.createquiz)
             e1button.pack()
-            e2button = Button(enemymenu, text = f'right {enemy.name}', command=hpbar2.takedamage)
+            e2button = Button(enemymenu, text = f'right {enemy.name}', command=hpbar2.createquiz)
             e2button.pack()
         elif enemy.amount == 1 and totalenemies == 2:
-            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar2.takedamage)
+            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar2.createquiz)
             e1button.pack()
         else:
-            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar1.takedamage)
+            e1button = Button(enemymenu, text=f'{enemy.name}',command=hpbar1.createquiz)
             e1button.pack()
         goback = Button(enemymenu, text='go back', command = self.playerreturn)
         goback.pack()
@@ -1331,6 +1382,12 @@ class Healthbar():
         global quizes
         quizes[random.randint(0,3)]()
 
+    def createquiz(self):
+        global healthbar_id
+        quizes[random.randint(0,3)]()
+        # animalsquiz()
+        healthbar_id = self.index
+
     def takedamage(self):
         global allenemies
         global enemy_currenthp
@@ -1340,17 +1397,14 @@ class Healthbar():
         global thecanvas
         global quizes
         global hurtenemy
-        global location
+        global coords
 
-        #insert tandom quizes here do this after dinner im going mad
-        # quizes[random.randint(0,3)]()
-        location = thecanvas.coords(allenemies[self.index])
+        coords = thecanvas.coords(allenemies[self.index])
         hurtenemy = ImageTk.PhotoImage(Image.open(f"sprites/hurt{enemy.name}.png"))
         thecanvas.delete(allenemies[self.index])
-        thecanvas.create_image(location[0], location[1], image=hurtenemy, tags=allenemies[self.index])
+        thecanvas.create_image(coords[0], coords[1], image=hurtenemy, tags=allenemies[self.index])
 
         enemy_currenthp[self.index] -= theplayer.attack
-        print(enemy_currenthp[self.index])
         if enemy_currenthp[self.index] <= 0:
             mixer.Sound.play(death)
             enemy_currenthp[self.index] = 0
@@ -1369,7 +1423,7 @@ class Healthbar():
     
     def returnsprite(self):
         thecanvas.delete(allenemies[self.index])
-        thecanvas.create_image(location[0], location[1], image=enemy_image, tags=allenemies[self.index])
+        thecanvas.create_image(coords[0], coords[1], image=enemy_image, tags=allenemies[self.index])
         enemy.enemyturn()
 
 # class Boss(Enemy):
