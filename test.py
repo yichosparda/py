@@ -30,11 +30,11 @@ enemyatk = [20, 30, 200]
 
 #skill/quiz/spell levels for player
 #saved using json
-alvl = 0
-slvl = 0
-mlvl = 0
-clvl = 0
-lvls = [mlvl, alvl, slvl, clvl] #storing levels to refer to later 
+# alvl = 0
+# slvl = 0
+# mlvl = 0
+# clvl = 0
+# lvls = [mlvl, alvl, slvl, clvl] #storing levels to refer to later 
 
 xpmultiplier = 1 #multiplies xp gained after and enemy level/strength
 
@@ -50,7 +50,6 @@ locks = [mlock, alock, slock, clock] #storing completion levels
 
 qsubjects = ["maths", "animal", "shape", "colour"] #types of quizes
 
-dialoguenum = 0 #dialogue process/index
 #dialogue dictionary
 dialogue = ["hi vr", 
             "u want to escape?"
@@ -74,6 +73,257 @@ image_references = [] #storing images to prevent garbage collection
 
 tg = TRUE #whether or not training grounds is unlocked
 combat = FALSE #whether or not in combat
+
+def account():
+    try: savewin.destroy() #close save window if it exists
+    except: pass
+    for widget in window.winfo_children():
+        widget.destroy()
+    mixer.music.load('music/login.mp3') 
+    mixer.music.play(-1)  # Play the music in a loop
+    welcometext = Label(window, text="welcome to fsnljk", font=("DotGothic16", 30, "bold"), bg="#000000", fg="#FFFFFF")
+    welcometext.place(relx=0.5, rely=0.2, anchor=CENTER)
+    loginbutton = Button(window, text="login", font=("DotGothic16", 20, "bold"), bg="#FFFFFF", fg="#000000", command=login)
+    loginbutton.place(relx=0.5, rely=0.4, anchor=CENTER)
+    signupbutton = Button(window, text="sign up", font=("DotGothic16", 20, "bold"), bg="#FFFFFF", fg="#000000", command=signup)
+    signupbutton.place(relx=0.5, rely=0.5, anchor=CENTER)
+
+def signup():
+    global accwin
+    global userentry
+    global passentry
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="disabled")
+    global avatar
+    accwin = Toplevel(window)
+    accwin.title("create account")
+    accwin_width = 400
+    accwin_height = 300
+    screen_width = accwin.winfo_screenwidth()
+    screen_height = accwin.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (accwin_width / 2))
+    y_coordinate = int((screen_height / 2) - (accwin_height / 2))
+    accwin.geometry(f"{accwin_width}x{accwin_height}+{x_coordinate}+{y_coordinate}")
+    accwin.option_add("*Background", "#000000")
+    accwin.config(bg="#000000")
+    accwin.resizable(False,False)
+    accwin.protocol("WM_DELETE_WINDOW", on_closing)
+
+    usertext = Label(accwin, text="username:", font=("DotGothic16", 15, "bold"), bg="#000000", fg="#FFFFFF")
+    usertext.place(relx=0.2, rely=0.1, anchor=CENTER)
+    userentry = Entry(accwin, bd=1, relief="ridge", width=20)
+    userentry.place(relx=0.65, rely=0.1, anchor=CENTER)
+    passtext = Label(accwin, text="password:", font=("DotGothic16", 15, "bold"), bg="#000000", fg="#FFFFFF")
+    passtext.place(relx=0.2, rely=0.3, anchor=CENTER)
+    passentry = Entry(accwin, bd=1, relief="ridge", width=20, show="*")
+    passentry.place(relx=0.65, rely=0.3, anchor=CENTER)
+
+    createacc = Button(accwin, text="create account", font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command=verifyacc)
+    createacc.place(relx=0.6, rely=0.6, anchor=CENTER)
+    backbutton = Button(accwin, text="back", font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command=acccancel)
+    backbutton.place(relx=0.6, rely=0.75, anchor=CENTER)
+    avatar = Image.open("sprites/nero.png")
+    avatar = ImageTk.PhotoImage(avatar.resize((100, 100)))
+    avatarprofile = Label(accwin, image=avatar)
+    avatarprofile.place(relx=0.2, rely=0.7, anchor=CENTER)
+
+def acccancel():
+    accwin.destroy()
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="active")
+
+def verifyacc():
+    global mlock
+    global alock
+    global slock
+    global clock
+    global locks
+    global mlvl
+    global dialoguenum
+    global alvl
+    global slvl
+    global clvl
+    global lvls
+    global username
+    username = userentry.get()
+    password = passentry.get()
+    global error_label
+
+    if username == "" or password == "":
+        try: error_label.destroy()
+        except: pass
+        error_label = Label(accwin, text="please fill in all fields", font=("DotGothic16", 12, "bold"), bg="#000000", fg="#FFFFFF")
+        error_label.place(relx=0.65, rely=0.4, anchor=CENTER)
+        return
+
+    try:
+        with open("user_data.json", "r") as file:
+            users = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        users = []
+    
+    # Check if the username already exists
+    for user in users:
+        if user['name'] == username:
+            try: error_label.destroy()
+            except: pass
+            error_label = Label(accwin, text="username already exists", font=("DotGothic16", 12, "bold"), bg="#000000", fg="#FFFFFF")
+            error_label.place(relx=0.65, rely=0.18, anchor=CENTER)
+            return
+    
+    # If the username is unique, create a new user
+    try:
+        with open("user_data.json", "r") as file:
+            users = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        users = []
+
+    new_user = {
+        "name": username,
+        "password": password,
+        "lvls": [0, 0, 0, 0],
+        "progress": 0
+    }
+    users.append(new_user)
+
+    with open("user_data.json", "w") as file:
+        json.dump(users, file, indent=4)
+    
+    accwin.destroy()
+    for widget in window.winfo_children():
+        widget.destroy()
+    alvl = 0
+    slvl = 0
+    mlvl = 0
+    clvl = 0
+    lvls = [mlvl, alvl, slvl, clvl]
+    mlock = 3
+    alock = 3
+    slock = 3
+    clock = 3
+    locks = [mlock, alock, slock, clock]
+    dialoguenum = 0
+    mixer.music.load('music/default.mp3')  # Load the lobby music file
+    mixer.music.play(-1)  # Play the lobby music in a loop
+    beginning()
+
+def login():
+    global accwin
+    global userentry
+    global passentry
+    for widget in window.winfo_children():
+        if isinstance(widget, (Button, ttk.Button)):
+            widget.config(state="disabled")
+    accwin = Toplevel(window)
+    accwin.title("create account")
+    accwin_width = 400
+    accwin_height = 200
+    screen_width = accwin.winfo_screenwidth()
+    screen_height = accwin.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (accwin_width / 2))
+    y_coordinate = int((screen_height / 2) - (accwin_height / 2))
+    accwin.geometry(f"{accwin_width}x{accwin_height}+{x_coordinate}+{y_coordinate}")
+    accwin.option_add("*Background", "#000000")
+    accwin.config(bg="#000000")
+    accwin.resizable(False,False)
+    accwin.protocol("WM_DELETE_WINDOW", on_closing)
+
+    usertext = Label(accwin, text="username:", font=("DotGothic16", 15, "bold"), bg="#000000", fg="#FFFFFF")
+    usertext.place(relx=0.2, rely=0.1, anchor=CENTER)
+    userentry = Entry(accwin, bd=1, relief="ridge", width=20)
+    userentry.place(relx=0.65, rely=0.1, anchor=CENTER)
+    passtext = Label(accwin, text="password:", font=("DotGothic16", 15, "bold"), bg="#000000", fg="#FFFFFF")
+    passtext.place(relx=0.2, rely=0.3, anchor=CENTER)
+    passentry = Entry(accwin, bd=1, relief="ridge", width=20, show="*")
+    passentry.place(relx=0.65, rely=0.3, anchor=CENTER)
+
+    checkbutton = Button(accwin, text='login', font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command = checkacc)
+    checkbutton.place(relx=0.5, rely=0.6, anchor=CENTER)
+    backbutton = Button(accwin, text="back", font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command=acccancel)
+    backbutton.place(relx=0.5, rely=0.8, anchor=CENTER)
+
+def checkacc():
+    global lvls
+    global mlock
+    global clock
+    global alock
+    global slock
+    global locks
+    global username
+    global dialoguenum
+    username=userentry.get()
+    password = passentry.get()
+    try:
+        with open("user_data.json", "r") as file:
+            users = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        users = []
+
+    for user in users:
+        if user['name'] == username and user['password']==password:
+            for x in range(0,4):
+                lvls = user['lvls']
+                if lvls[0]> 0:
+                    mlock =0
+                if lvls[1]>0:
+                    alock =0
+                if lvls[2]>0:
+                    slock=0
+                if lvls[3]>0:
+                    clock=0
+                locks = [mlock, alock, slock, clock]
+                dialoguenum = user['progress']
+                mixer.music.load('music/default.mp3')  # Load the lobby music file
+                mixer.music.play(-1)  # Play the lobby music in a loop
+                accwin.destroy()
+                lobby()
+        else:
+            error_label = Label(accwin, text='username or password is incorrect', font=("DotGothic16", 12, "bold"), bg="#000000", fg="#FFFFFF")
+            error_label.place(anchor=CENTER, relx=0.5, rely=0.42)
+
+
+def save():
+    global username
+    global lvls
+    global savewin
+    global dialoguenum
+
+    try:
+        with open("user_data.json", "r") as file:
+            users = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        users = []
+    
+    for user in users:
+        if user['name'] == username:
+            user['lvls'] = [lvls[0], lvls[1], lvls[2], lvls[3]]
+            user['progress']=dialoguenum
+
+    with open("user_data.json", "w") as file:
+        json.dump(users, file, indent=4)
+    
+    mixer.Sound.play(healsfx)
+    savewin = Toplevel(window)
+    savewin.title("save")
+    savewin.geometry("300x200")
+    savewin.option_add("*Background", "#000000")
+    savewin.config(bg="#000000")
+    savewin.resizable(False,False)
+    savetext = Label(savewin, text="data saved successfully", font=("DotGothic16", 15, "bold"), bg="#000000", fg="#FFFFFF")
+    savetext.place(relx=0.5, rely=0.1, anchor=CENTER)
+    leavebutton = Button(savewin, text="return to homescreen", font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command=account)
+    leavebutton.place(relx=0.5, rely=0.35, anchor = CENTER)
+    continuebutton = Button(savewin, text='return to game', font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command=savewin.destroy)
+    continuebutton.place(relx=0.5, rely=0.5, anchor = CENTER)
+
+def savedatabtn():
+    savebutton = Button(window, text="save data", command=save, font=("DotGothic16", 15, "bold"), fg="#000000")
+    savebutton.place(relx=0.25, rely=0.05, anchor=CENTER)
+
+def on_closing():
+    pass
 
 class Background():
     def __init__(self, index):
@@ -180,6 +430,7 @@ def mathquiz():
     qwindow.option_add("*Background", "#000000")
     qwindow.config(bg="#000000")
     qwindow.resizable(False,False)
+    qwindow.protocol("WM_DELETE_WINDOW", on_closing)
     mcount = 15
     result = 0 
 
@@ -417,6 +668,7 @@ def animalsquiz():
     qwindow.option_add("*Background", "#000000")
     qwindow.config(bg="#000000")
     qwindow.resizable(False,False)
+    qwindow.protocol("WM_DELETE_WINDOW", on_closing)
 
     animals = ['Bear','Bird','Cat','Dog','Fox','Horse', 'Penguin', 'Raccoon']
     animal = random.randint(0,7)
@@ -561,6 +813,7 @@ def shapesquiz():
     qwindow.option_add("*Background", "#000000")
     qwindow.config(bg="#000000")
     qwindow.resizable(False,False)
+    qwindow.protocol("WM_DELETE_WINDOW", on_closing)
     result = 0
     shapes = ['Rectangle','Square','Circle','Pentagon','Hexagon','Octagon']
     scount = 15
@@ -718,6 +971,7 @@ def coloursquiz():
     qwindow.option_add("*Background", "#000000")
     qwindow.config(bg="#000000")
     qwindow.resizable(False,False)
+    qwindow.protocol("WM_DELETE_WINDOW", on_closing)
     result = 0
     colours = ['Red','Blue','Green','Pink','Black','Yellow','Orange','White','Purple','Brown']
     ccount = 15
@@ -1176,6 +1430,8 @@ class Combatmenu():
         global combat
         global questiontally
         global xpmultiplier
+        mixer.music.load("music/enemy.mp3")
+        mixer.music.play(-1)
         questiontally = 0 #number of questions answered in combat
         combat = TRUE
         # totalenemies = random.randint(1,2)
@@ -1249,7 +1505,7 @@ class Combatmenu():
         thecanvas.create_image(600, 100, image=combatbox)
         thecanvas.create_text(600, 100, text=f"you won!\nyou answered {questiontally} questions successfully", font=("DotGothic16", 15, "bold"), fill="white")
 
-        returnbutton = Button(window, text="return to training grounds", command=traininggrounds, font=("DotGothic16", 15, "bold"), fg="#000000")
+        returnbutton = Button(window, text="return to training grounds", command=self.exitcombat, font=("DotGothic16", 15, "bold"), fg="#000000")
         returnbutton.place(relx=0.7, rely=0.78, anchor=CENTER)
 
         fightagain = Button(window, text="fight again", command=enemydecide, font=("DotGothic16", 15, "bold"), fg="#000000")
@@ -1273,7 +1529,7 @@ class Combatmenu():
         topwin.option_add("*Background", "#000000")
         topwin.config(bg="#000000")
         topwin.resizable(False,False)
-        gameover_text = Label(topwin, text="you lost...\ntry again?", font=("DotGothic16", 15, "bold"), fg="#000000", bg="#FFFFFF")
+        gameover_text = Label(topwin, text="you lost...\ntry again?", font=("DotGothic16", 15, "bold"), fg="#FFFFFF", bg="#000000")
         gameover_text.pack(pady=10)
         retry_button = Button(topwin, text="retry", command=self.restart, font=("DotGothic16", 15, "bold"), fg="#000000")
         retry_button.pack(pady=10)
@@ -1281,8 +1537,12 @@ class Combatmenu():
         quit_button.pack(pady=10)
     
     def exitcombat(self):
-        topwin.destroy()
-        windowsetup()
+        global pcurrent_health
+        if pcurrent_health <= 0:
+            topwin.destroy()
+            windowsetup()
+        mixer.music.load("music/default.mp3")
+        mixer.music.play(-1)
         traininggrounds()
 
     def restart(self):
@@ -1319,7 +1579,7 @@ class Player():
         health_ratio = pcurrent_health / self.health
         bar_width = 490 * health_ratio
         phealthbar.create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
-        hpamount.config(text=f'{pcurrent_health}/{self.health}')
+        hpamount.config(text=f'{round(pcurrent_health)}/{self.health}')
 
     def takedamage(self):
         global pcurrent_health
@@ -1461,7 +1721,7 @@ class Enemy():
         window.after(1000)
         turnsleft -= 1
         theplayer.takedamage()
-        window.after(1000, self.enemyattacks)
+        window.after(100, self.enemyattacks)
 
 class Spiders(Enemy):
     def displayenemy(self):
@@ -1556,7 +1816,7 @@ class Healthbar():
 
         enemy_currenthp[self.index] -= theplayer.attack
         if enemy_currenthp[self.index] <= 0:
-            mixer.Sound.play(death)
+            mixer.Sound.play(boom)
             enemy_currenthp[self.index] = 0
             healthbars[self.index].place_forget()
             thecanvas.delete(allenemies[self.index])
@@ -1594,11 +1854,14 @@ def lobby():
         widget.destroy()
     currentbg=Background(1)
     currentbg.load()
+    savedatabtn()
     
     doors()
     profile()
     tgicon()
 
-beginning()
+# beginning()
+
+account()
 
 mainloop()

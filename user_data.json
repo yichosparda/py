@@ -1,0 +1,24 @@
+[
+    {
+        "name": "nero",
+        "password": "sparda",
+        "lvls": [
+            1,
+            1,
+            1,
+            0
+        ],
+        "progress": 5
+    },
+    {
+        "name": "nero2",
+        "password": "sparda",
+        "lvls": [
+            10,
+            10,
+            10,
+            9
+        ],
+        "progress": 8
+    }
+]
