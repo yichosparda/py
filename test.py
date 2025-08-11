@@ -217,7 +217,7 @@ def login():
         if isinstance(widget, (Button, ttk.Button)):
             widget.config(state="disabled")
     accwin = Toplevel(window)
-    accwin.title("create account")
+    accwin.title("login")
     accwin_width = 400
     accwin_height = 200
     screen_width = accwin.winfo_screenwidth()
@@ -282,7 +282,6 @@ def checkacc():
         else:
             error_label = Label(accwin, text='username or password is incorrect', font=("DotGothic16", 12, "bold"), bg="#000000", fg="#FFFFFF")
             error_label.place(anchor=CENTER, relx=0.5, rely=0.42)
-
 
 def save():
     global username
@@ -1434,15 +1433,15 @@ class Combatmenu():
         mixer.music.play(-1)
         questiontally = 0 #number of questions answered in combat
         combat = TRUE
-        # totalenemies = random.randint(1,2)
-        totalenemies = 2
+        totalenemies = random.randint(1,2)
+        # totalenemies = 2
         if enemytype ==1:
             enemy = Spiders(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
             xpmultiplier = 2
         elif enemytype == 0:
             xpmultiplier = 1
             enemy = Enemy(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
-        theplayer = Player(200+lvls[3], 30+lvls[0], lvls[2])
+        theplayer = Player(200+10*lvls[3], 30+2*lvls[0], lvls[2], 1-0.001*lvls[1])
         for widget in window.winfo_children():
             widget.destroy()
         mixer.Sound.play(battlestart)
@@ -1551,10 +1550,11 @@ class Combatmenu():
         self.innitcombat()
 
 class Player():
-    def __init__(self, health, attack, luck):
+    def __init__(self, health, attack, luck, defence):
         self.health = health
         self.attack = attack
         self.luck = luck
+        self.defence = defence
     
     def displayhealthbar(self):
         global hpbar_image

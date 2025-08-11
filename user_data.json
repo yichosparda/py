@@ -20,5 +20,16 @@
             9
         ],
         "progress": 8
+    },
+    {
+        "name": "testing",
+        "password": "1",
+        "lvls": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "progress": 0
     }
 ]
