@@ -31,5 +31,27 @@
             0
         ],
         "progress": 0
+    },
+    {
+        "name": "aug12",
+        "password": "123",
+        "lvls": [
+            27,
+            27,
+            27,
+            28
+        ],
+        "progress": 8
+    },
+    {
+        "name": "aug12(2)",
+        "password": "123",
+        "lvls": [
+            0,
+            0,
+            0,
+            0
+        ],
+        "progress": 4
     }
 ]

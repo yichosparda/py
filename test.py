@@ -71,7 +71,7 @@ stats = ['attack', 'defence', 'luck', 'health'] #player stats
 image_paths = ["sprites/attack.png", "sprites/defence.png", "sprites/luck.png", "sprites/health.png"]
 image_references = [] #storing images to prevent garbage collection
 
-tg = TRUE #whether or not training grounds is unlocked
+tg = FALSE #whether or not training grounds is unlocked
 combat = FALSE #whether or not in combat
 
 def account():
@@ -253,6 +253,7 @@ def checkacc():
     global locks
     global username
     global dialoguenum
+    global tg
     username=userentry.get()
     password = passentry.get()
     try:
@@ -273,15 +274,18 @@ def checkacc():
                     slock=0
                 if lvls[3]>0:
                     clock=0
-                locks = [mlock, alock, slock, clock]
-                dialoguenum = user['progress']
-                mixer.music.load('music/default.mp3')  # Load the lobby music file
-                mixer.music.play(-1)  # Play the lobby music in a loop
-                accwin.destroy()
-                lobby()
+            if lvls[0]>0 and lvls[1]>0 and lvls[2]>0 and lvls[3] > 0:
+                tg = TRUE
+            locks = [mlock, alock, slock, clock]
+            dialoguenum = user['progress']
+            mixer.music.load('music/default.mp3')  # Load the lobby music file
+            mixer.music.play(-1)  # Play the lobby music in a loop
+            accwin.destroy()
+            lobby()
         else:
-            error_label = Label(accwin, text='username or password is incorrect', font=("DotGothic16", 12, "bold"), bg="#000000", fg="#FFFFFF")
-            error_label.place(anchor=CENTER, relx=0.5, rely=0.42)
+            if accwin.winfo_exists():
+                error_label = Label(accwin, text='username or password is incorrect', font=("DotGothic16", 12, "bold"), bg="#000000", fg="#FFFFFF")
+                error_label.place(anchor=CENTER, relx=0.5, rely=0.42)
 
 def save():
     global username
@@ -362,8 +366,6 @@ def windowsetup():
     window.resizable(False,False)
     textbox_image = Image.open("sprites/textbox.png")
     textbox = ImageTk.PhotoImage(textbox_image)
-    
-windowsetup()
 
 def vdialogue():
     global textbox
@@ -417,6 +419,11 @@ def mathquiz():
     for widget in window.winfo_children():
         if isinstance(widget, (Button, ttk.Button)):
             widget.config(state="disabled")
+    try:
+        for widget in enemymenu.winfo_children():
+            if isinstance(widget, Button):
+                widget.config(state="disabled")
+    except:pass
     qwindow = Toplevel(window)
     qwindow.title("maths question")
     qwindow_width = 450
@@ -655,6 +662,11 @@ def animalsquiz():
     for widget in window.winfo_children():
         if isinstance(widget, (Button, ttk.Button)):
             widget.config(state="disabled")
+    try:
+        for widget in enemymenu.winfo_children():
+            if isinstance(widget, Button):
+                widget.config(state="disabled")
+    except:pass
     qwindow = Toplevel(window)
     qwindow.title("animal question")
     qwindow_width = 300
@@ -800,6 +812,11 @@ def shapesquiz():
     for widget in window.winfo_children():
         if isinstance(widget, (Button, ttk.Button)):
             widget.config(state="disabled")
+    try:
+        for widget in enemymenu.winfo_children():
+            if isinstance(widget, Button):
+                widget.config(state="disabled")
+    except:pass
     qwindow = Toplevel(window)
     qwindow.title("shape question")
     qwindow_width = 300
@@ -958,6 +975,11 @@ def coloursquiz():
     for widget in window.winfo_children():
         if isinstance(widget, (Button, ttk.Button)):
             widget.config(state="disabled")
+    try:
+        for widget in enemymenu.winfo_children():
+            if isinstance(widget, Button):
+                widget.config(state="disabled")
+    except:pass
     qwindow = Toplevel(window)
     qwindow.title("colour question")
     qwindow_width = 300
@@ -1232,7 +1254,7 @@ def doors():
     global dialoguenum
     
     bdoor = ImageTk.PhotoImage(Image.open('sprites/bossdoor.png'))
-    thebdoor = Button(window, image=bdoor, width=260, height=356, state=DISABLED)
+    thebdoor = Button(window, image=bdoor, width=260, height=356, command = bossarena)
     thebdoor.place(anchor=CENTER, relx=0.5, rely=0.3)
     if lvls[2]==0:
         sdoor = ImageTk.PhotoImage(Image.open('sprites/sdoor.png'))
@@ -1324,8 +1346,8 @@ def tgverify():
     if tg == TRUE:
         traininggrounds()
     else:
-        textbox_image = Image.open("sprites/textbox.png")
-        textbox = ImageTk.PhotoImage(textbox_image)
+        # textbox_image = Image.open("sprites/textbox.png")
+        # textbox = ImageTk.PhotoImage(textbox_image)
         thetextbox = Button(window, image=textbox, command = lobby)
         thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
         text1 = Label(window, text = "learn spells to access training grounds")
@@ -1434,7 +1456,6 @@ class Combatmenu():
         questiontally = 0 #number of questions answered in combat
         combat = TRUE
         totalenemies = random.randint(1,2)
-        # totalenemies = 2
         if enemytype ==1:
             enemy = Spiders(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
             xpmultiplier = 2
@@ -1482,6 +1503,8 @@ class Combatmenu():
         for widget in window.winfo_children():
             widget.destroy()
         
+        mixer.Sound.play(healsfx)
+
         combat = FALSE
         currentbg = Background(4)
         currentbg.load()
@@ -1515,6 +1538,8 @@ class Combatmenu():
         global topwin
         window.destroy()
         mixer.Sound.play(death)
+        mixer.music.load('music/gameover.mp3')
+        mixer.music.play(-1)
         combat= FALSE
         topwin = Tk()
         topwin.title("game over")
@@ -1585,7 +1610,7 @@ class Player():
         global pcurrent_health
         global enemy
         global location
-        pcurrent_health -= enemy.attack
+        pcurrent_health -= enemy.attack*self.defence
         try:
             if window.winfo_exists():
                 mixer.Sound.play(receivehit)
@@ -1719,6 +1744,9 @@ class Enemy():
     def enemyattack(self):
         global turnsleft
         window.after(1000)
+        global critlabel
+        try: critlabel.destroy()
+        except:pass
         turnsleft -= 1
         theplayer.takedamage()
         window.after(100, self.enemyattacks)
@@ -1790,11 +1818,9 @@ class Healthbar():
         bar_width = 290 * health_ratio
         healthbars[self.index].create_rectangle(15, 15, bar_width, 40, fill="brown", tags="health_bar")
 
-
     def createquiz(self):
         global healthbar_id
         quizes[random.randint(0,3)]()
-        # animalsquiz()
         healthbar_id = self.index
 
     def takedamage(self):
@@ -1808,13 +1834,22 @@ class Healthbar():
         global hurtenemy
         global coords
         global location
+        global critlabel
 
         coords = thecanvas.coords(allenemies[self.index])
         hurtenemy = ImageTk.PhotoImage(Image.open(f"sprites/hurt{enemy.name}.png"))
         thecanvas.delete(allenemies[self.index])
         thecanvas.create_image(coords[0], coords[1], image=hurtenemy, tags=allenemies[self.index])
 
-        enemy_currenthp[self.index] -= theplayer.attack
+        playerhits = [theplayer.attack, theplayer.attack*1.1]
+        print(theplayer.luck)
+        theplayerdmg = random.choices(playerhits, weights = [20, theplayer.luck], k=1)[0]
+        # theplayerdmg = random.choices(playerhits, weights = [0, theplayer.luck], k=1)[0]
+        if theplayerdmg == theplayer.attack*1.1:
+            critlabel = Label(window, text='CRITICAL HIT !!!', font=("DotGothic16", 20, "bold"), fg="#FFFFFF", bg="#000000")
+            critlabel.place(anchor=CENTER, relx= 0.3, rely = 0.75)
+
+        enemy_currenthp[self.index] -= theplayerdmg
         if enemy_currenthp[self.index] <= 0:
             mixer.Sound.play(boom)
             enemy_currenthp[self.index] = 0
@@ -1840,13 +1875,16 @@ class Healthbar():
 # class Boss(Enemy):
 #     def __init__(self):
 #         pass
-
-def combatexp():
-    global lvls
-    global xpmultiplier
-    global totalenemies
-    global enemy
     
+def bossarena():
+    if lvls[0] >= 20 and lvls[1] >=20 and lvls[2] >=20 and lvls[3] >= 20:
+        print('pass through')
+    else: 
+        thetextbox = Button(window, image=textbox, command = lobby)
+        thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
+        text1 = Label(window, text = "spell levels aren't high enough")
+        text1.place(relx=0.5, y = 700 ,anchor=CENTER)
+
 def lobby():
     global currentbg
     global lobbybgimg
@@ -1855,13 +1893,12 @@ def lobby():
     currentbg=Background(1)
     currentbg.load()
     savedatabtn()
-    
     doors()
     profile()
     tgicon()
 
 # beginning()
-
+windowsetup()
 account()
 
 mainloop()
