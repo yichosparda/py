@@ -25,8 +25,8 @@ backgrounds = ['startup','lobbybg', 'tutarea', 'tg', 'combat', 'tutstart']
 
 #storing enemy and enemy types
 enemies = ['slime', 'spider', 'cerberus']
-enemyhp = [random.randint(50,60), random.randint(70,90), 500] #randomises enemy hp to some extent
-enemyatk = [20, 30, 200]
+enemyhp = [random.randint(50,60), random.randint(70,90)] #randomises enemy hp to some extent
+enemyatk = [20, 30]
 
 #skill/quiz/spell levels for player
 #saved using json
@@ -336,6 +336,7 @@ class Background():
         global bgimage
         bgimage=ImageTk.PhotoImage(Image.open(f'backgrounds/{backgrounds[self.index]}.png'))
         currentbg = Label(window, image=bgimage)
+        currentbg.image = bgimage
         currentbg.place(anchor=CENTER, relx=0.5, rely=0.5)
 
 def loadicons():
@@ -1451,20 +1452,26 @@ class Combatmenu():
         global combat
         global questiontally
         global xpmultiplier
+        combat = TRUE
         mixer.music.load("music/enemy.mp3")
         mixer.music.play(-1)
         questiontally = 0 #number of questions answered in combat
-        combat = TRUE
-        totalenemies = random.randint(1,2)
-        if enemytype ==1:
-            enemy = Spiders(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
-            xpmultiplier = 2
-        elif enemytype == 0:
-            xpmultiplier = 1
-            enemy = Enemy(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
-        theplayer = Player(200+10*lvls[3], 30+2*lvls[0], lvls[2], 1-0.001*lvls[1])
+        if self.area == 'training grounds':
+            totalenemies = random.randint(1,2)
+            if enemytype ==1:
+                enemy = Spiders(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
+                xpmultiplier = 2
+            elif enemytype == 0:
+                xpmultiplier = 1
+                enemy = Enemy(enemies[enemytype],enemyhp[enemytype], totalenemies, enemyatk[enemytype])
+        else:
+            totalenemies =1
+            xpmultiplier =3
+            enemy = Boss('cerberus', 600, totalenemies, 80)
+
         for widget in window.winfo_children():
             widget.destroy()
+        theplayer = Player(200+10*lvls[3], 30+2*lvls[0], lvls[2], 1-0.001*lvls[1])
         mixer.Sound.play(battlestart)
         self.combatsetup()
         theplayer.playerturn()
@@ -1500,6 +1507,7 @@ class Combatmenu():
         global combatmenu
         global combatbox
         global xpmultiplier
+        global location
         for widget in window.winfo_children():
             widget.destroy()
         
@@ -1529,6 +1537,8 @@ class Combatmenu():
 
         returnbutton = Button(window, text="return to training grounds", command=self.exitcombat, font=("DotGothic16", 15, "bold"), fg="#000000")
         returnbutton.place(relx=0.7, rely=0.78, anchor=CENTER)
+        if location.area == 'boss arena':
+            returnbutton.config(text='return to lobby')
 
         fightagain = Button(window, text="fight again", command=enemydecide, font=("DotGothic16", 15, "bold"), fg="#000000")
         fightagain.place(relx=0.7, rely=0.84, anchor=CENTER)
@@ -1536,6 +1546,7 @@ class Combatmenu():
     def gameover(self):
         global combat
         global topwin
+        global location
         window.destroy()
         mixer.Sound.play(death)
         mixer.music.load('music/gameover.mp3')
@@ -1559,15 +1570,21 @@ class Combatmenu():
         retry_button.pack(pady=10)
         quit_button = Button(topwin, text="return to training grounds", command=self.exitcombat, font=("DotGothic16", 15, "bold"), fg="#000000")
         quit_button.pack(pady=10)
+        if location.area == 'boss arena':
+            quit_button.config(text = "return to lobby", command=combattolobby)
     
     def exitcombat(self):
         global pcurrent_health
-        if pcurrent_health <= 0:
-            topwin.destroy()
-            windowsetup()
+        global location
+        # if pcurrent_health <= 0:
+        #     topwin.destroy()
+        #     windowsetup()
         mixer.music.load("music/default.mp3")
         mixer.music.play(-1)
-        traininggrounds()
+        if location.area == 'training grounds':
+            traininggrounds()
+        else:
+            combattolobby()
 
     def restart(self):
         topwin.destroy()
@@ -1784,6 +1801,30 @@ class Spiders(Enemy):
         combatbox = ImageTk.PhotoImage(Image.open("sprites/combattext.png"))
         thecanvas.create_image(600, 100, image=combatbox)
 
+class Boss(Enemy):
+    def displayenemy(self):
+        global enemy_image
+        global healthbars
+        global enemy_currenthp
+        global hpbar1
+        global hpbar2
+        global allenemies
+        global combatbox
+        global thecanvas
+        thecanvas = Canvas(window, width=1200, height=900,)
+        thecanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+        thecanvas.create_image(0, 0, image=bgimage, anchor=NW)
+        healthbars = []
+        enemy_image = ImageTk.PhotoImage(Image.open(f"sprites/{self.name}.png"))
+        thecanvas.create_image(600, 500, image=enemy_image, tags='enemy1')
+        allenemies = ['enemy1']
+        hpbar1 = Healthbar(self.health, 0)
+        hpbar1.createhealthbar()
+        hpbar1.displayhealthbar()
+        enemy_currenthp = [self.health]
+        combatbox = ImageTk.PhotoImage(Image.open("sprites/combattext.png"))
+        thecanvas.create_image(600, 100, image=combatbox)
+
 class Healthbar():
     def __init__(self, maxhp, index):
         self.maxhp = maxhp
@@ -1871,19 +1912,29 @@ class Healthbar():
         thecanvas.delete(allenemies[self.index])
         thecanvas.create_image(coords[0], coords[1], image=enemy_image, tags=allenemies[self.index])
         enemy.enemyturn()
-
-# class Boss(Enemy):
-#     def __init__(self):
-#         pass
     
 def bossarena():
+    global location
     if lvls[0] >= 20 and lvls[1] >=20 and lvls[2] >=20 and lvls[3] >= 20:
         print('pass through')
+        location = Combatmenu('boss arena')
+        location.innitcombat()
     else: 
         thetextbox = Button(window, image=textbox, command = lobby)
         thetextbox.place(relx=0.5, y = 700 ,anchor=CENTER)
         text1 = Label(window, text = "spell levels aren't high enough")
         text1.place(relx=0.5, y = 700 ,anchor=CENTER)
+
+def combattolobby():
+    try:
+        topwin.destroy()
+        windowsetup()
+    except:
+        for widget in window.winfo_children():
+            widget.destroy()    
+    mixer.music.load('music/default.mp3')  # Load the lobby music file
+    mixer.music.play(-1)
+    lobby()
 
 def lobby():
     global currentbg
