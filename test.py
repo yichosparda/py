@@ -28,14 +28,6 @@ enemies = ['slime', 'spider', 'cerberus']
 enemyhp = [random.randint(50,60), random.randint(70,90)] #randomises enemy hp to some extent
 enemyatk = [20, 30]
 
-#skill/quiz/spell levels for player
-#saved using json
-# alvl = 0
-# slvl = 0
-# mlvl = 0
-# clvl = 0
-# lvls = [mlvl, alvl, slvl, clvl] #storing levels to refer to later 
-
 xpmultiplier = 1 #multiplies xp gained after and enemy level/strength
 
 subjectindex = 'none' #determines type of quiz
@@ -74,9 +66,12 @@ image_references = [] #storing images to prevent garbage collection
 tg = FALSE #whether or not training grounds is unlocked
 combat = FALSE #whether or not in combat
 
+
 def account():
     try: savewin.destroy() #close save window if it exists
     except: pass
+    try: win.destroy()
+    except:pass
     for widget in window.winfo_children():
         widget.destroy()
     mixer.music.load('music/login.mp3') 
@@ -1514,34 +1509,36 @@ class Combatmenu():
         mixer.Sound.play(healsfx)
 
         combat = FALSE
-        currentbg = Background(4)
-        currentbg.load()
-        for x in range(0,4):
-            lvls[x] += questiontally*xpmultiplier
 
-        thecanvas = Canvas(window, width=1200, height=900)
-        thecanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
-        thecanvas.create_image(0, 0, image=bgimage, anchor=NW)
-
-        combatmenu = ImageTk.PhotoImage(Image.open("sprites/combatmenu.png"))
-        thecmenu = Label(window, image=combatmenu)
-        thecmenu.place(relx=0.5, rely=0.82 ,anchor=CENTER)
-        newlvls = Label(window, text=f"attack is now level {lvls[0]}\n defence is now level {lvls[1]}\n luck is now level {lvls[2]}\n health is now level {lvls[3]}", font=("DotGothic16", 15, "bold"))
-        newlvls.place(relx=0.35, rely=0.82, anchor=CENTER)
-        profile()
-        neropfp.place(x=63,y=645)
-
-        combatbox = ImageTk.PhotoImage(Image.open("sprites/combattext.png"))
-        thecanvas.create_image(600, 100, image=combatbox)
-        thecanvas.create_text(600, 100, text=f"you won!\nyou answered {questiontally} questions successfully", font=("DotGothic16", 15, "bold"), fill="white")
-
-        returnbutton = Button(window, text="return to training grounds", command=self.exitcombat, font=("DotGothic16", 15, "bold"), fg="#000000")
-        returnbutton.place(relx=0.7, rely=0.78, anchor=CENTER)
         if location.area == 'boss arena':
-            returnbutton.config(text='return to lobby')
+            finboss()
+        else:
+            currentbg = Background(4)
+            currentbg.load()
+            for x in range(0,4):
+                lvls[x] += questiontally*xpmultiplier
 
-        fightagain = Button(window, text="fight again", command=enemydecide, font=("DotGothic16", 15, "bold"), fg="#000000")
-        fightagain.place(relx=0.7, rely=0.84, anchor=CENTER)
+            thecanvas = Canvas(window, width=1200, height=900)
+            thecanvas.place(relx=0.5, rely=0.5, anchor=CENTER)
+            thecanvas.create_image(0, 0, image=bgimage, anchor=NW)
+
+            combatmenu = ImageTk.PhotoImage(Image.open("sprites/combatmenu.png"))
+            thecmenu = Label(window, image=combatmenu)
+            thecmenu.place(relx=0.5, rely=0.82 ,anchor=CENTER)
+            newlvls = Label(window, text=f"attack is now level {lvls[0]}\n defence is now level {lvls[1]}\n luck is now level {lvls[2]}\n health is now level {lvls[3]}", font=("DotGothic16", 15, "bold"))
+            newlvls.place(relx=0.35, rely=0.82, anchor=CENTER)
+            profile()
+            neropfp.place(x=63,y=645)
+
+            combatbox = ImageTk.PhotoImage(Image.open("sprites/combattext.png"))
+            thecanvas.create_image(600, 100, image=combatbox)
+            thecanvas.create_text(600, 100, text=f"you won!\nyou answered {questiontally} questions successfully", font=("DotGothic16", 15, "bold"), fill="white")
+
+            returnbutton = Button(window, text="return to training grounds", command=self.exitcombat, font=("DotGothic16", 15, "bold"), fg="#000000")
+            returnbutton.place(relx=0.7, rely=0.78, anchor=CENTER)
+
+            fightagain = Button(window, text="fight again", command=enemydecide, font=("DotGothic16", 15, "bold"), fg="#000000")
+            fightagain.place(relx=0.7, rely=0.84, anchor=CENTER)
 
     def gameover(self):
         global combat
@@ -1935,6 +1932,50 @@ def combattolobby():
     mixer.music.load('music/default.mp3')  # Load the lobby music file
     mixer.music.play(-1)
     lobby()
+
+def finboss():
+    lobby()
+    global win
+
+    try:
+        with open("user_data.json", "r") as file:
+            users = json.load(file)
+    except (FileNotFoundError, json.JSONDecodeError):
+        users = []
+    
+    for user in users:
+        if user['name'] == username:
+            user['lvls'] = [lvls[0], lvls[1], lvls[2], lvls[3]]
+            user['progress']=dialoguenum
+
+    with open("user_data.json", "w") as file:
+        json.dump(users, file, indent=4)
+
+    mixer.music.load('music/default.mp3')  # Load the lobby music file
+    mixer.music.play(-1)
+
+    win = Toplevel(window)
+    win.title("game finished")
+    win_width = 500
+    win_height = 300
+    screen_width = win.winfo_screenwidth()
+    screen_height = win.winfo_screenheight()
+    x_coordinate = int((screen_width / 2) - (win_width / 2))
+    y_coordinate = int((screen_height / 2) - (win_height / 2))
+    win.geometry(f"{win_width}x{win_height}+{x_coordinate}+{y_coordinate}")
+    win.option_add("*Background", "#000000")
+    win.config(bg="#000000")
+    win.resizable(False,False)
+
+    fintext = Label(win, text='congrats! you have beaten the game\n you can now quit or keep levelling your skills\n cerberus is rematchable at any point in time')
+    fintext.place(anchor=CENTER, rely=0.4, relx=0.5)
+    menubtn = Button(win, text='QUIT', font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command = account)
+    menubtn.place(anchor=CENTER, rely=0.6, relx=0.4)
+    continuebtn = Button(win, text='CONTINUE', font=("DotGothic16", 15, "bold"), bg="#FFFFFF", fg="#000000", command=backtogame)
+    continuebtn.place(anchor=CENTER, rely=0.6, relx=0.6)
+
+def backtogame():
+    win.destroy()
 
 def lobby():
     global currentbg

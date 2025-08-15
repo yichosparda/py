@@ -36,10 +36,10 @@
         "name": "aug12",
         "password": "123",
         "lvls": [
-            27,
-            27,
-            27,
-            28
+            100,
+            50,
+            50,
+            50
         ],
         "progress": 8
     },
@@ -64,5 +64,16 @@
             0
         ],
         "progress": 0
+    },
+    {
+        "name": "nysha",
+        "password": "pw",
+        "lvls": [
+            29,
+            29,
+            24,
+            22
+        ],
+        "progress": 8
     }
 ]
